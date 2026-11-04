@@ -1,0 +1,691 @@
+[
+{
+"k": "h1",
+"t": "Abstract"
+},
+{
+"k": "body",
+"t": "Directional-change (DC) methods convert price paths into event time by declaring a reversal after price moves a specified distance from a running extreme. Although the framework is useful descriptively, a threshold-triggered event is not automatically a tradable forecast. This study reports a staged, reproducible attempt to turn DC reversals into a standalone strategy for Bybit ETHUSDT and XRPUSDT linear perpetual futures. The research began with an exact replication of a seemingly profitable short-window strategy, then replaced its legacy exits with independent DC event streams, causal next-bar execution, first-passage outcomes, volatility normalization, market-regime maps, a dynamic probability model, and two preregistered selectivity filters. One-minute exchange data were checked by SHA-256, ZIP CRC, chronology, duplicate, schema, and OHLC invariants; no candles were interpolated or synthesized. Inference used chronological walk-forward folds, time-block bootstrap procedures, and family-wise correction for threshold searches. The central regime hypothesis failed: the forced regime-conditioned map was negative even before execution costs and underperformed a fixed detector. The best observed fixed multiplier, k = 1.25, earned a Phase 5 point estimate of +4.93 basis points per trade before execution costs but -8.97 basis points after modeled costs (profit factor 0.843). After correction for selecting among nine multipliers, its simultaneous 95% lower bound was -0.14 basis points. A confirmation-impulse filter and a single BTC lead-lag filter also failed their preregistered gates. The result is a narrow but credible null: under market-taker execution, 240-minute holding, extreme-anchored risk, and the tested ETH/XRP sample, DC reversal did not provide a statistically established, cost-surviving standalone edge."
+},
+{
+"k": "body",
+"t": "Keywords: directional change; intrinsic time; cryptocurrency; backtesting; transaction costs; multiple testing; walk-forward validation; null results"
+},
+{
+"k": "h1",
+"t": "1. Introduction"
+},
+{
+"k": "body",
+"t": "Many algorithmic-trading projects begin with a favorable chart interval and a plausible story. The difficult question is whether that result survives longer histories, realistic execution, dependence-aware inference, and the cumulative effect of trying many specifications. Directional-change analysis is especially vulnerable to this transition. Its event-based representation is intuitive: price is treated as moving upward or downward until it reverses by a threshold from the latest extreme. Yet the threshold both determines when a reversal is declared and changes the price at which a hypothetical trade would enter. A threshold that describes a completed path well need not be knowable, stable, or economically useful in real time."
+},
+{
+"k": "body",
+"t": "This paper documents a full research sequence rather than presenting only the most favorable specification. The sequence began with a TradingView strategy whose short test window appeared profitable. Exact Python parity showed that the result depended on a small number of economic entries, partial-exit fragments, and an unusually favorable interval. A continuous 2021-2026 audit rejected the complete legacy strategy. The project then retained only the DC reversal event and rebuilt the problem as a causal first-passage study using authentic Bybit data."
+},
+{
+"k": "body",
+"t": "The primary economic hypothesis was that a dynamic threshold should outperform a fixed one: first identify volatility and market regime, then choose the DC threshold supported for that state, otherwise do not trade. This hypothesis was tested through fixed percentage thresholds, a nonlinear probability model, an absolute regime lookup, and finally a parsimonious six-regime volatility-normalized design. The regime design was deliberately corrected to avoid nested-threshold labeling, sparse combinatorial cells, naive confidence intervals, and look-ahead regime classification. A final reward-to-risk reformulation and two bounded filters tested whether the weak gross signal could be concentrated or carried by BTC."
+},
+{
+"k": "body",
+"t": "The central finding is negative but informative. Regime-conditioned selection did not improve the fixed detector; it selected thresholds with worse subsequent price paths. The fixed detector retained a small positive point estimate before execution costs, but this was not statistically established after adjusting for the nine-way multiplier search, and it could not cover the account's observed fee and slippage burden. Neither a strong confirmation candle nor a direction-aligned BTC impulse rescued the strategy."
+},
+{
+"k": "body",
+"t": "The paper makes four contributions:"
+},
+{
+"k": "bullet",
+"t": "It separates DC event detection from retrospective labeling by running each threshold as an independent causal event stream."
+},
+{
+"k": "bullet",
+"t": "It decomposes failure into signal-path weakness, unresolved timeouts, and exchange-specific execution costs rather than reporting only final profit."
+},
+{
+"k": "bullet",
+"t": "It applies chronological validation, moving-block inference, and family-wise correction to a threshold-and-regime search whose observations are strongly dependent."
+},
+{
+"k": "bullet",
+"t": "It reports a reproducible null result and the exact boundary of that null, including what remains untested."
+},
+{
+"k": "image"
+},
+{
+"k": "cap",
+"t": "Figure 1. Research sequence and major evidentiary outcomes. Stages 0-5 are the completed DC specification studies; H1-H2 are the bounded post-Phase-5 filters. H3 order-flow research had not begun and is treated only as future work."
+},
+{
+"k": "h1",
+"t": "2. Related literature"
+},
+{
+"k": "body",
+"t": "Directional-change analysis belongs to the broader intrinsic-time literature, in which market activity is sampled by price events rather than by equally spaced clock time. Early high-frequency foreign-exchange work documented stylized facts across multiple scales (Guillaume et al., 1997). Glattfelder, Dupuis, and Olsen (2011) used event-based measurements to identify scaling relationships in high-frequency foreign-exchange data. Aloud, Tsang, Olsen, and Dupuis (2012) formalized directional-change events as a way to characterize periodic market activity. These papers establish DC as a useful representation of price paths; they do not imply that a threshold-crossing rule must survive trading costs in every market."
+},
+{
+"k": "body",
+"t": "The threshold-selection problem is central. A move that reaches 3% necessarily passes through smaller percentages, but those crossings are not interchangeable labels: each implies a different confirmation time, entry price, running extreme, stop distance, target, and opportunity set. Dynamic-threshold studies have proposed adapting DC parameters to market conditions (for example, Alkhamees and Fasli, 2017), but any empirical comparison across thresholds creates a model-selection problem. The present study therefore treats each multiplier as its own detector and later corrects inference across the entire family."
+},
+{
+"k": "body",
+"t": "The statistical design is motivated by the data-snooping literature. White (2000) showed why the best model encountered in a specification search requires inference that accounts for the search. Politis and Romano (1994) developed a bootstrap suited to dependent observations, while Romano and Wolf (2005) formalized multiple-testing control using resampling. Bailey and Lopez de Prado (2014) and Bailey et al. (2017) emphasize how repeated backtests inflate apparent performance; Harvey, Liu, and Zhu (2016) make the same point for empirical return predictors. In cryptocurrency specifically, Anghel (2021) reports that technical and machine-learning rules rarely retain statistically significant excess returns after market frictions and data-snooping controls."
+},
+{
+"k": "body",
+"t": "Finally, implementation is part of the hypothesis. Kissell (2020) treats commissions, spreads, delay, market impact, and opportunity cost as integral to algorithmic-trading evaluation. For perpetual futures, fees, funding, tick rules, and achievable order type determine whether a statistical pattern can be monetized. This study therefore distinguishes a signal-path return from the complete modeled return and refuses to treat a hypothetical maker fee substitution as evidence that a maker order would have filled."
+},
+{
+"k": "h1",
+"t": "3. Data and reproducibility controls"
+},
+{
+"k": "h2",
+"t": "3.1 Market data"
+},
+{
+"k": "body",
+"t": "The principal dataset consists of one-minute OHLCV candles for Bybit ETHUSDT and XRPUSDT linear perpetual contracts. The core regime and exit studies used the first available 2021 candle through 31 December 2024: 1,998,720 ETH minutes and 1,913,186 XRP minutes, or 3,911,906 observations in total. Historical funding-rate files and exchange instrument specifications supplied tick-size and contract constraints. A later cross-asset hypothesis added 2,103,840 audited BTCUSDT one-minute candles for 2021-2024. Data fields were obtained from the exchange's market-data interfaces, whose current documentation describes kline, instrument, and funding-history endpoints (Bybit, 2026a, 2026b, 2026c)."
+},
+{
+"k": "cap",
+"t": "Table 1. Data coverage and role"
+},
+{
+"k": "note",
+"t": "The 11,743 funding-row figure refers to the initial ETH/XRP archive audit. Later experiments read only the periods needed for their frozen designs."
+},
+{
+"k": "h2",
+"t": "3.2 Authenticity checks"
+},
+{
+"k": "body",
+"t": "The market history was not generated by a language model and was not repaired by interpolation. Before analysis, every source archive was checked against a download manifest using SHA-256; each ZIP passed CRC testing. Validators checked schema, numeric parsing, OHLC ordering, nonnegative volume and turnover, strict one-minute chronology, duplicates, annual boundaries, and expected row counts. The initial ETH/XRP audit covered 16 files, 5,636,460 candles across 2021-2026, and 11,743 funding records. Every check passed. The BTC addition was separately matched to a manifest and a 2,106-entry HTTPS request ledger; all 2,103,840 BTC candles were present with no gap, forward-fill, repair, or synthetic substitution."
+},
+{
+"k": "body",
+"t": "Derived event stores were checked with SQLite integrity tests, unique event identifiers, exact signal-to-entry timing, deterministic reruns, and output hashes. Major stages reproduced their principal analytical files byte for byte. The use of generative AI in code assistance did not extend to market-data generation; all numerical results in this manuscript were transcribed from frozen, hash-checked result artifacts and independently reconciled tables."
+},
+{
+"k": "h2",
+"t": "3.3 Time separation and an important limitation"
+},
+{
+"k": "body",
+"t": "Phase 1 used 2021-2023 for discovery and reserved 2024 for one-time validation. After that candidate failed, Phases 3-5 treated 2021-2024 as development data and kept later rows out of their engines. The post-Phase-5 program similarly used 2021-2022 to initialize causal distributions and 2023-2024 for walk-forward evaluation. Automated audits recorded zero 2025-2026 rows read by those engines."
+},
+{
+"k": "body",
+"t": "However, the broadest claim of a pristine 2025+ holdout would be too strong. Before the event-study redesign, the legacy HELIOS strategy had already been audited across its available history through August 2026 under materially different rules. Thus 2025-2026 remained mechanically unopened by the redesigned research engines, but later-period market behavior had been seen in a precursor strategy. This paper makes no confirmatory claim from 2025-2026 and does not report a final holdout test."
+},
+{
+"k": "h1",
+"t": "4. Methods"
+},
+{
+"k": "h2",
+"t": "4.1 Directional-change detector"
+},
+{
+"k": "body",
+"t": "The detector has two states. In an upward state it maintains the highest observed bar high, H_t. A downward change is confirmed when the current bar closes more than theta below that extreme. In a downward state it maintains the lowest observed bar low, L_t. An upward change is confirmed when the close rises more than theta above that low:"
+},
+{
+"k": "body",
+"t": "downward change if C_t < H_t(1 - theta_t);     upward change if C_t > L_t(1 + theta_t)."
+},
+{
+"k": "body",
+"t": "Bar highs and lows update the running extreme; the close confirms the reversal. A signal exists only after the one-minute bar closes. To avoid assuming the unknown intrabar order of high and low, the new leg begins at the confirmation close. The first state initialization does not create a trade."
+},
+{
+"k": "h2",
+"t": "4.2 Independent threshold streams and the nested-threshold correction"
+},
+{
+"k": "body",
+"t": "A completed 3% reversal contains crossings of 0.5%, 1%, 2%, and other smaller levels. It is therefore invalid to label the path retrospectively with a single 'true threshold.' Each threshold changes the event sequence and its economic trade. The corrected design runs every theta, or every volatility multiplier k, as an independent state machine over the entire series. Each stream has its own extreme, signal time, next-bar entry, stop, target, position occupancy, and return. Comparisons are made across streams, not across hindsight labels assigned to one pivot."
+},
+{
+"k": "body",
+"t": "Phase 1 evaluated fixed percentage thresholds from 0.25% to 5.00%. Phase 3 used a denser 0.25%-increment grid. Phase 4 replaced absolute thresholds with a dimensionless rule:"
+},
+{
+"k": "body",
+"t": "theta_t(k) = k sigma_t,     k in {0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50, 3.00}."
+},
+{
+"k": "body",
+"t": "Here sigma_t is the previous completed UTC day's median of rolling 240-minute realized volatility. It changes once per day, which reduces threshold whipsaw. In the Phase 4 baseline, pivot detection and reversal confirmation were explicitly represented but coupled to the same theta_t(k); decoupling them remains an untested alternative rather than a hidden optimization."
+},
+{
+"k": "h2",
+"t": "4.3 Regime classification"
+},
+{
+"k": "body",
+"t": "Phase 3 first tested a larger absolute-threshold taxonomy. Because the resulting cells were sparse and unstable, Phase 4 limited the primary taxonomy to two dimensions and six cells. Volatility level was defined from the previous day's median 240-minute realized volatility ranked against the prior 180 completed days: low below the 33rd percentile, normal between the 33rd and 67th percentiles, and high above the 67th percentile. Price structure was range or trend according to the magnitude of r_240/RV_240, entering trend at 0.75 and returning to range at 0.25. Hysteresis prevented rapid regime switching. Side was not a regime dimension; the same policy served long and short signals."
+},
+{
+"k": "body",
+"t": "For an open position, later regime changes did not alter the original stop, target, or deadline. This avoided a second unregistered decision rule and ensured that the entry-time regime alone determined threshold selection."
+},
+{
+"k": "h2",
+"t": "4.4 Trade construction and costs"
+},
+{
+"k": "cap",
+"t": "Table 2. Frozen trade mechanics in the corrected studies"
+},
+{
+"k": "body",
+"t": "For Phase 5 fixed k = 1.25, the observed mean execution drag was 13.9002 basis points per trade: 11.0027 basis points in fees and 2.8975 basis points in slippage and tick effects. Funding contributed +0.0701 basis points on average. Because historical mark-price series were not part of the Phase 4 source set, funding notional used the entry price rather than an invented mark price."
+},
+{
+"k": "h2",
+"t": "4.5 Outcome labels and diagnostics"
+},
+{
+"k": "body",
+"t": "Every candidate was labeled TP-first, SL-first, or timeout according to the future one-minute path, while every feature and signal decision used only information available at confirmation. Future paths created research labels; they never changed past signals. The primary outcome was net basis points per completed trade. Profit factor, time stability, asset and side coverage, concentration, and exit-reason composition were secondary diagnostics. Signal-path gross return removed fees, slippage, tick effects, and funding from the same frozen trade geometry; it was used to distinguish a weak signal from an execution-cost problem, not as a tradable result."
+},
+{
+"k": "h2",
+"t": "4.6 Statistical design"
+},
+{
+"k": "body",
+"t": "Random train-test shuffling was not used. Phase 2 employed chronological half-year walk-forward tests and a final 90-day calibration window. Phases 4 and 5 used four expanding folds: 2023 H1, 2023 H2, 2024 H1, and 2024 H2. Related observations were assigned episode identifiers, and threshold streams were made economically non-overlapping before regime attribution."
+},
+{
+"k": "body",
+"t": "Time dependence was addressed with calendar-block procedures. Phase 4 used 10,000 four-calendar-week moving-block, studentized max-t bootstrap replications across all 54 regime-by-multiplier cells in each fold. A later correction applied the same family-wise logic jointly to the nine fixed k streams. The post-Phase-5 H1 and H2 studies used 20,000 four-week circular moving-block replications and one-sided 98% bounds, reflecting their preallocated alpha of 0.02 each. The H1/H2/H3 order and 0.02/0.02/0.01 allocation were saved after Phase 5 but before H1 and H2 outcomes; it cannot retroactively protect earlier exploratory phases."
+},
+{
+"k": "cap",
+"t": "Table 3. Research stages and prespecified decision logic"
+},
+{
+"k": "h1",
+"t": "5. Results"
+},
+{
+"k": "h2",
+"t": "5.1 The legacy strategy did not survive full-history testing"
+},
+{
+"k": "body",
+"t": "Exact Python replication first matched the short TradingView examples, including entry and exit timing, partial fills, commissions, slippage, and margin-call behavior. That parity converted a visual backtest into an auditable benchmark. The continuous history then contradicted the short-window impression. Starting from USDT 1,000, final liquidation value fell to USDT 34.84 for ETH and USDT 32.96 for XRP, returns of -96.52% and -96.70%. The 2,116 ETH setups and 2,433 XRP setups were negative even before commission; month-block bootstrap intervals for mean setup return were entirely below zero. The short profitable window had been dominated by a few entries and fragmented exits rather than a durable sequence of independent predictions."
+},
+{
+"k": "cap",
+"t": "Table 4. Full-history legacy benchmark"
+},
+{
+"k": "note",
+"t": "This legacy audit used a different complete strategy and is reported as the motivation for the later event-study redesign, not pooled with later trade returns."
+},
+{
+"k": "h2",
+"t": "5.2 Fixed-threshold event study and dynamic probability model"
+},
+{
+"k": "body",
+"t": "Phase 1 stored 484,915 causal candidates from 2,857,826 discovery bars in 2021-2023. Among 2,400 configurations with at least 1,000 observations, only five had positive sample means and none had a positive week-clustered 95% lower bound. The best ETH configuration averaged +2.80 basis points but had a lower bound of -8.04; XRP's best sufficiently sampled configuration remained negative."
+},
+{
+"k": "body",
+"t": "Phase 2 then estimated TP-first, SL-first, and timeout probabilities using regularized logistic regression and histogram gradient boosting. At the predeclared 5-basis-point predicted-EV hurdle, the nonlinear model was nearly flat at -0.257 basis points per trade, but its 95% interval crossed zero. A post-diagnostic 50-basis-point hurdle yielded +10.615 basis points over 230 discovery trades but remained uncertain and sparse; it was frozen as Candidate A and evaluated once in 2024."
+},
+{
+"k": "cap",
+"t": "Table 5. Dynamic-threshold discovery and 2024 validation"
+},
+{
+"k": "body",
+"t": "Candidate A forecast +78.977 basis points of mean expectancy for its 2024 selections but realized -18.982. Both ETH and XRP were negative. The model did change its threshold choices, yet the score calibration and discovery ranking failed to transfer. This was the first clean demonstration that dynamic selection itself was insufficient."
+},
+{
+"k": "h2",
+"t": "5.3 Absolute regime maps were unstable"
+},
+{
+"k": "body",
+"t": "Phase 3 reframed the problem as a direct regime lookup: identify the regime, estimate each threshold's realized performance using earlier periods, assign no trade when none passes the gate, and apply the map to the next half-year. Among 144 regime-half-year cells with adequate descriptive samples, 94 had a positive hindsight winner, but only 28 had a positive unadjusted lower bound and none survived the global Benjamini-Hochberg correction. Nineteen of twenty absolute thresholds won somewhere, while the exact winner repeated in only 7.14% of adjacent regime-period comparisons. All regime-selection policies lost in walk-forward testing; the 9-state forced map averaged -15.21 basis points with PF 0.749. The lesson was not that no favorable historical cell existed, but that the identity of the winner was not stable enough to be selected prospectively."
+},
+{
+"k": "h2",
+"t": "5.4 Volatility normalization and the central regime hypothesis"
+},
+{
+"k": "body",
+"t": "Phase 4 corrected the earlier taxonomy by using only six regimes and nine independent volatility-normalized k streams. Across four folds, 32 of 216 training cells had positive nominal means; zero passed the complete evidence gate. The evidence-gated policy therefore made no trades. A forced map was retained only to diagnose whether the lookup selected useful thresholds even without the statistical gate. It did not."
+},
+{
+"k": "cap",
+"t": "Table 6. Phase 4 walk-forward policy comparison"
+},
+{
+"k": "body",
+"t": "The forced regime map was negative before execution costs, so its failure was not merely a fee problem. By contrast, fixed k = 1.25 had a modest positive point estimate before cost but became negative even under half the modeled execution burden. Regime conditioning thus underperformed the naive fixed detector on the metric the project was designed to improve."
+},
+{
+"k": "image"
+},
+{
+"k": "cap",
+"t": "Figure 2. Signal-path and full-cost returns for fixed and regime-conditioned policies. The regime-conditioned map was worse than the fixed detector before and after execution costs in both registered exit designs."
+},
+{
+"k": "h2",
+"t": "5.5 Exit geometry, timeouts, and the final RR revision"
+},
+{
+"k": "body",
+"t": "Under Phase 4's 1:1, extreme-anchored bracket, fixed k = 1.25 timed out on 43.14% of trades and the forced map on 44.86%. Timeouts were already adverse before costs (-7.02 basis points for the fixed stream and -17.47 for the forced map). Phase 5 made the one permitted change from 1.0R to 1.5R. The wider target increased timeout frequency to 55.27% for fixed k and 73.32% for the forced map. Fixed-stream timeouts were then slightly favorable before cost (+10.36 basis points) but negative after cost (-3.49 basis points)."
+},
+{
+"k": "body",
+"t": "No Phase 5 regime-by-threshold cell had a positive mean, PF above one, or positive simultaneous lower bound. The regime line terminated under its written stopping rule. Fixed k = 1.25 produced +4.8567 basis points from the signal path and +0.0701 from funding but lost 11.0027 in fees and 2.8975 in slippage and tick effects, for -8.9734 net and PF 0.8429."
+},
+{
+"k": "image"
+},
+{
+"k": "cap",
+"t": "Figure 3. Phase 5 fixed-k edge budget. The small pre-execution point estimate was less than half the modeled execution drag."
+},
+{
+"k": "body",
+"t": "A separate symmetric close-bracket diagnostic asked whether very close equal-distance exits would eliminate timeouts. The nearest tick-valid target that netted at least +1.5 basis points was a median 13.62 basis points from entry, so the raw stop was placed the same distance away. Timeouts fell to 0.08% for fixed k and 0.04% for the forced map. Nevertheless, completed target wins averaged only +1.91 basis points net while stops averaged -26.90, because both outcomes paid round-trip costs. Break-even required a target-first rate above 93%, versus 37.09% observed. This diagnostic proves that the original timeouts were largely a distance issue, but it does not produce a viable micro-target strategy. It also reused frozen entries; because earlier exits would alter future position availability, it was not represented as a new causal backtest."
+},
+{
+"k": "h2",
+"t": "5.6 Multiple-comparison correction for the fixed baseline"
+},
+{
+"k": "body",
+"t": "The apparent fixed-k gross effect required a further correction. k = 1.25 had been carried forward as the best observed member of nine streams, while the earlier family-wise calculation protected the 54 regime cells but not the standalone k comparison. A 10,000-replication, four-week moving-block max-t audit across all nine fixed policies changed the interpretation. Under 1.0R, the k = 1.25 pre-execution mean was +4.1288 basis points, but its simultaneous 95% lower bound was -0.1687 (adjusted one-sided p = 0.0651). Under 1.5R, the mean was +4.9268, the simultaneous lower bound was -0.1385, and adjusted p = 0.0586. No multiplier passed. k = 1.25 remained the descriptive winner, not an established latent edge."
+},
+{
+"k": "h2",
+"t": "5.7 Cost sensitivity"
+},
+{
+"k": "body",
+"t": "A cost-capacity analysis repriced the frozen 5,187-trade Phase 5 stream under account fee scenarios. The full taker/taker model remained at -8.97 basis points. Even an impossible zero-slippage taker/taker case averaged -6.08. A fee-only maker/maker substitution produced +0.93 basis points and PF 1.018, but its 95% lower bound was -2.97. The 95% confidence-adjusted all-in cost capacity was only 1.0311 basis points, whereas the account's displayed standard maker/maker fee alone was 4 basis points before missed fills, queue risk, or adverse selection. Cost reduction alone could not validate the unconditional stream."
+},
+{
+"k": "h2",
+"t": "5.8 Bounded selectivity and BTC lead-lag hypotheses"
+},
+{
+"k": "body",
+"t": "After terminating regime reformulations, the project registered a three-hypothesis edge-discovery program. H1 used one outcome-blind confirmation-impulse filter on fixed k = 1.25. H2 used one direction-aligned BTC five-minute return normalized by 240-minute realized volatility. Both used a causal 180-day 75th-percentile cutoff with at least 50 prior events. The order and alpha allocations were saved before H1 and H2 outcomes, but the program could not retroactively repair earlier k selection. H2 addressed that inheritance by evaluating all nine k streams jointly."
+},
+{
+"k": "cap",
+"t": "Table 7. Post-Phase-5 filter results"
+},
+{
+"k": "note",
+"t": "H2 trade counts across k are not independent portfolios; they are parallel detector streams in one corrected comparison family."
+},
+{
+"k": "body",
+"t": "H1 improved the baseline by +2.29 basis points per trade and raised TP-first frequency, but its 98% lower bound remained -14.42 and timeouts stayed near 55%. H2 improved the k = 1.25 row by +1.23 basis points, but the simultaneous absolute 98% lower bound was -18.58 and the paired improvement lower bound was -8.09. Neither filter came close to covering roughly 14 basis points of execution burden with statistical margin."
+},
+{
+"k": "h1",
+"t": "6. Discussion"
+},
+{
+"k": "h2",
+"t": "6.1 The regime-first thesis was not supported"
+},
+{
+"k": "body",
+"t": "The project's motivating claim was that no fixed threshold should work across all market states, so regime identification should precede threshold selection. The empirical result was the reverse: the regime-conditioned maps selected thresholds whose subsequent paths were worse than the fixed k = 1.25 stream. This occurred before costs in both the 1.0R and 1.5R designs. The result does not prove that every possible regime definition is useless, but it rejects the tested volatility-level by trend/range taxonomy as a source of threshold-selection value. Continuing to reshuffle regime dimensions after repeated failure would create a garden of forking paths rather than stronger evidence."
+},
+{
+"k": "h2",
+"t": "6.2 Signal problem versus cost problem"
+},
+{
+"k": "body",
+"t": "The distinction between signal and execution matters. The forced regime map was a signal problem because its frozen paths were negative before cost. The best fixed stream was primarily a cost-capacity problem: it had a small positive point estimate before cost, but the estimate was unstable, selected from nine candidates, and statistically unconfirmed after family-wise correction. Execution then exceeded the point estimate by roughly nine basis points. Therefore neither 'the signal contains nothing' nor 'maker orders automatically rescue it' is justified. The supported statement is that the measured effect is too small and uncertain for the tested account and market-order implementation."
+},
+{
+"k": "h2",
+"t": "6.3 What the timeout analysis adds"
+},
+{
+"k": "body",
+"t": "High timeout rates initially suggested that targets and stops might be too distant for a four-hour horizon. The close-bracket diagnostic confirmed the distance mechanism: moving both barriers near entry almost eliminated timeouts. But round-trip costs destroyed payoff symmetry. Equal raw price distances are not equal net outcomes when fees are paid at entry and exit. At the smallest profitable target, a stop could not be both adverse and limited to the same 1.5-basis-point net loss. The experiment therefore clarified the mechanism without offering a free fix."
+},
+{
+"k": "h2",
+"t": "6.4 Long-short asymmetry is diagnostic, not a new model"
+},
+{
+"k": "body",
+"t": "Several rejected policies showed better long than short performance, especially during a strongly rising 2023-2024 sample. Funding did not explain the difference; short timeouts had worse price paths. However, those splits were discovered inside failed policies and were not corrected as standalone hypotheses. A long-only model or a reversed-short rule would therefore be a new, post-hoc strategy, not an implication of the unified results. The manuscript reports the asymmetry only to diagnose drift exposure and explicitly does not promote it into a trade rule."
+},
+{
+"k": "h2",
+"t": "6.5 Why a null result is useful"
+},
+{
+"k": "body",
+"t": "The research demonstrates how apparent edge can disappear at several distinct layers: a short favorable window, non-independent exit fragments, a fixed threshold assumption, unstable dynamic scoring, sparse regime cells, overlapping threshold streams, multiple comparisons, arbitrary exit geometry, and transaction costs. Negative publication is valuable here because omitting these stages would leave only the attractive cells and would encourage replication of an economically invalid strategy. The result is consistent with prior evidence that technical rules in cryptocurrency rarely retain excess returns after frictions and data-snooping controls (Anghel, 2021)."
+},
+{
+"k": "h1",
+"t": "7. Limitations"
+},
+{
+"k": "bullet",
+"t": "The core evidence covers only ETHUSDT and XRPUSDT on one venue. Minute count is large, but the number of independent assets and market regimes is small."
+},
+{
+"k": "bullet",
+"t": "One-minute OHLC bars do not identify intrabar order. Stop-first treatment is conservative; an optimistic reversal of all same-minute ties did not rescue the close-bracket diagnostic, but exact path replay requires trades or order-book data."
+},
+{
+"k": "bullet",
+"t": "The fee model used the account's displayed regular futures rates and conservative slippage. Historical maker-fill probability, queue position, and adverse selection were not observed, so maker execution is untested."
+},
+{
+"k": "bullet",
+"t": "Historical mark-price series were not used in Phase 4; entry notional approximated funding notional. Funding was small in the short-horizon results, but the approximation should not be generalized to longer holds."
+},
+{
+"k": "bullet",
+"t": "The 240-minute maximum hold and the extreme-anchored stop are design choices. Only one registered RR change and one close-bracket diagnostic were evaluated; trailing exits and a corrected multi-horizon family were not tested."
+},
+{
+"k": "bullet",
+"t": "The post-Phase-5 alpha-spending plan protected H1 and H2 prospectively but cannot retroactively protect Phases 1-5. The later nine-k correction partially repairs one important selection path, not every informal judgment made during the full project."
+},
+{
+"k": "bullet",
+"t": "The legacy audit exposed 2025-2026 market behavior under a precursor strategy. Later engines did not read those rows, but the period is not claimed as a fully pristine researcher-level holdout."
+},
+{
+"k": "bullet",
+"t": "H3 order-flow research had not begun. This paper therefore makes no claim about whether authentic L2 imbalance, public trade flow, open interest, or measured maker fills can add value to DC events."
+},
+{
+"k": "h1",
+"t": "8. Implications and future research"
+},
+{
+"k": "body",
+"t": "The most defensible future use of DC is as an event clock or feature rather than a complete strategy. Any continuation should begin with new information, not another rearrangement of the same price thresholds. The registered next direction is one order-flow hypothesis only after authentic market-microstructure data pass provenance, sequence-gap, and timing audits. Required inputs include order-book snapshots and deltas, public trades with aggressor side, best bid and ask, mark and index prices, funding, open interest, local receipt timestamps, reconnect logs, and actual post-only acknowledgements and fills if execution testing is authorized."
+},
+{
+"k": "body",
+"t": "A future microstructure study should predefine one feature family, one event-alignment rule, one cost model, and one multiplicity correction before outcomes are inspected. Order-flow imbalance is a plausible candidate because price impact is related to order-book events (Cont, Kukanov, and Stoikov, 2014), but its historical availability and queue interpretation on Bybit are separate empirical problems. A maker strategy must count missed fills and adverse selection; substituting a lower maker fee into market fills is only an upper-bound sensitivity calculation."
+},
+{
+"k": "body",
+"t": "A separate replication program could test the same frozen detector on additional liquid perpetual contracts or venues. That would increase cross-sectional evidence but would require venue-specific instrument rules, fee tiers, liquidity, and funding. Smaller assets may be less informationally efficient but impose larger spreads and capacity constraints. They should not be used as a rescue sample for this paper."
+},
+{
+"k": "h1",
+"t": "9. Conclusion"
+},
+{
+"k": "body",
+"t": "This study began with a profitable-looking short sample and ended with a reproducible, bounded null result. The complete legacy strategy failed over full history. Fixed thresholds did not establish unconditional post-cost expectancy. A nonlinear dynamic threshold policy failed its untouched 2024 validation. Absolute regime winners were unstable. A parsimonious six-regime volatility-normalized map selected worse thresholds than a fixed detector. Changing the target to 1.5R, minimizing timeout distance, repricing account fees, filtering on confirmation impulse, and conditioning on a single BTC lead-lag signal all failed to create a statistically supported, cost-surviving policy."
+},
+{
+"k": "body",
+"t": "The best observed fixed multiplier retained a small pre-execution point estimate, but it did not survive correction for having been selected from nine alternatives and was less than the modeled cost burden. The resulting conclusion is deliberately narrow: for Bybit ETHUSDT and XRPUSDT over the tested 2021-2024 development period, under causal next-bar market-taker execution, a 240-minute horizon, extreme-anchored risk, and the registered filter families, directional-change reversal was not a viable standalone trading edge. The broader value of the work is methodological: authentic data, causal event construction, honest costs, time-aware uncertainty, multiple-testing control, and explicit stopping rules changed the answer from apparent opportunity to evidence-based rejection."
+},
+{
+"k": "h1",
+"t": "References"
+},
+{
+"k": "ref",
+"t": "Alkhamees, N., & Fasli, M. (2017). A directional change based trading strategy with dynamic thresholds. 2017 IEEE International Conference on Data Science and Advanced Analytics (DSAA), 283-292. https://ieeexplore.ieee.org/document/8259787/"
+},
+{
+"k": "ref",
+"t": "Aloud, M., Tsang, E. P. K., Olsen, R., & Dupuis, A. (2012). A directional-change event approach for studying financial time series. Economics, 6, 2012-36. https://doi.org/10.5018/economics-ejournal.ja.2012-36"
+},
+{
+"k": "ref",
+"t": "Anghel, D.-G. (2021). A reality check on trading rule performance in the cryptocurrency market: Machine learning vs. technical analysis. Finance Research Letters, 39, 101655. https://doi.org/10.1016/j.frl.2020.101655"
+},
+{
+"k": "ref",
+"t": "Bailey, D. H., & Lopez de Prado, M. (2014). The deflated Sharpe ratio: Correcting for selection bias, backtest overfitting, and non-normality. Journal of Portfolio Management, 40(5), 94-107. https://doi.org/10.3905/jpm.2014.40.5.094"
+},
+{
+"k": "ref",
+"t": "Bailey, D. H., Borwein, J. M., Lopez de Prado, M., & Zhu, Q. J. (2017). The probability of backtest overfitting. Journal of Computational Finance, 20(4), 39-69. https://doi.org/10.21314/JCF.2016.322"
+},
+{
+"k": "ref",
+"t": "Bybit. (2026a). Get Kline: V5 API documentation. https://bybit-exchange.github.io/docs/v5/market/kline Data-download tools, data audits and the author's follow-up studies, which use the same pre-registration discipline, are public at https://github.com/Crayon99-droid/crypto-strategy-research."
+},
+{
+"k": "ref",
+"t": "Bybit. (2026b). Get Instruments Info: V5 API documentation. https://bybit-exchange.github.io/docs/v5/market/instrument"
+},
+{
+"k": "ref",
+"t": "Bybit. (2026c). Get Funding Rate History: V5 API documentation. https://bybit-exchange.github.io/docs/v5/market/history-fund-rate"
+},
+{
+"k": "ref",
+"t": "Cont, R., Kukanov, A., & Stoikov, S. (2014). The price impact of order book events. Journal of Financial Econometrics, 12(1), 47-88. https://doi.org/10.1093/jjfinec/nbt003"
+},
+{
+"k": "ref",
+"t": "Glattfelder, J. B., Dupuis, A., & Olsen, R. B. (2011). Patterns in high-frequency FX data: Discovery of 12 empirical scaling laws. Quantitative Finance, 11(4), 599-614. https://doi.org/10.1080/14697688.2010.481632"
+},
+{
+"k": "ref",
+"t": "Guillaume, D. M., Dacorogna, M. M., Dave, R. R., Muller, U. A., Olsen, R. B., & Pictet, O. V. (1997). From the bird's eye to the microscope: A survey of new stylized facts of the intra-daily foreign exchange markets. Finance and Stochastics, 1, 95-129. https://doi.org/10.1007/s007800050018"
+},
+{
+"k": "ref",
+"t": "Harvey, C. R., Liu, Y., & Zhu, H. (2016). ... and the cross-section of expected returns. Review of Financial Studies, 29(1), 5-68. https://doi.org/10.1093/rfs/hhv059"
+},
+{
+"k": "ref",
+"t": "Kissell, R. (2020). Algorithmic trading methods: Applications using advanced statistics, optimization, and machine learning techniques (2nd ed.). Academic Press. https://www.sciencedirect.com/book/monograph/9780128156308/algorithmic-trading-methods"
+},
+{
+"k": "ref",
+"t": "Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap. Journal of the American Statistical Association, 89(428), 1303-1313. https://doi.org/10.1080/01621459.1994.10476870"
+},
+{
+"k": "ref",
+"t": "Romano, J. P., & Wolf, M. (2005). Stepwise multiple testing as formalized data snooping. Econometrica, 73(4), 1237-1282. https://doi.org/10.1111/j.1468-0262.2005.00615.x"
+},
+{
+"k": "ref",
+"t": "White, H. (2000). A reality check for data snooping. Econometrica, 68(5), 1097-1126. https://doi.org/10.1111/1468-0262.00152"
+},
+{
+"k": "h1",
+"t": "Appendix A. Evidence architecture"
+},
+{
+"k": "cap",
+"t": "Table A1. Main audit safeguards"
+},
+{
+"k": "h1",
+"t": "Appendix B. Reproduction map"
+},
+{
+"k": "body",
+"t": "A complete submission supplement should preserve the following frozen artifact groups:"
+},
+{
+"k": "bullet",
+"t": "Legacy parity engine, parity report, complete-history result JSON/CSV files, and full-history audit."
+},
+{
+"k": "bullet",
+"t": "Phase 1 event store, frozen configuration, discovery statistics, source audit, and report."
+},
+{
+"k": "bullet",
+"t": "Phase 2 modeling engine, serialized model, model manifest, walk-forward outputs, 2024 validation report, and validation trades."
+},
+{
+"k": "bullet",
+"t": "Phase 3 and Phase 4 engines, configs, SQLite stores, walk-forward tables, trade-level files, integrity manifests, and independent rerun outputs."
+},
+{
+"k": "bullet",
+"t": "Phase 4.1 exit-reason amendment, time-to-resolution tables, cell-level cost breakdowns, and preregistration."
+},
+{
+"k": "bullet",
+"t": "Phase 5 RR 1.5 protocol, result tables, trade-level archive, symmetric close-bracket diagnostic, and cost-sensitivity surface."
+},
+{
+"k": "bullet",
+"t": "Nine-k selection amendment, edge-discovery program plan, timestamp/hash chronology, H1 protocol/results/trades, and H2 BTC source audit/protocol/results/trades."
+},
+{
+"k": "body",
+"t": "For journal submission, the supplement should also contain a single machine-readable manifest giving each file's relative path, byte size, SHA-256 digest, creation checkpoint, and whether it reads any post-2024 source. The manuscript's reported values should be generated from the same final tables included in that manifest."
+},
+{
+"k": "h1",
+"t": "Appendix C. Anticipated questions"
+},
+{
+"k": "body",
+"t": "This appendix answers questions a reader or referee is likely to raise. Every figure is taken from the sections and tables cited; C.1 contains one derived quantity, identified as such."
+},
+{
+"k": "h2",
+"t": "C.1 Was the study simply underpowered?"
+},
+{
+"k": "body",
+"t": "No, not for an effect large enough to trade. For the selected fixed stream (k = 1.25, 1.5R), the pre-execution mean was +4.93 basis points with a simultaneous 95% lower bound of -0.14 basis points (Section 5.6), so the simultaneous margin is about 5.07 basis points. A pre-cost effect large enough to cover the measured execution burden of 13.90 basis points would be about 2.7 times that margin and would almost certainly have produced a positive lower bound. The design could therefore detect any economically sufficient effect; what it cannot resolve is whether a small, untradable effect of around 5 basis points exists. (Derived from the reported mean and bound; not a separately simulated power analysis.)"
+},
+{
+"k": "h2",
+"t": "C.2 Why only ETHUSDT and XRPUSDT, and why Bybit?"
+},
+{
+"k": "body",
+"t": "The two contracts were the markets of the original strategy and offer long, liquid, continuous one-minute histories on the venue whose fees and funding the account actually pays. BTCUSDT was used as a lead-lag feature (H2), not as a target, to keep the comparison family small. The narrow sample is listed as the first limitation; Section 8 proposes a frozen-detector replication on other contracts and venues, explicitly not as a rescue sample."
+},
+{
+"k": "h2",
+"t": "C.3 Would maker (limit-order) execution change the conclusion?"
+},
+{
+"k": "body",
+"t": "Not on the evidence available. Substituting maker fees into the same fills gives +0.93 basis points (profit factor 1.018) with a 95% lower bound of -2.97 basis points (Section 5.7), and that is an upper bound: it assumes every limit order fills, with no queue risk and no adverse selection. The confidence-adjusted cost capacity of 1.03 basis points is below even the account's displayed 4-basis-point maker/maker fee. Testing maker execution properly requires order-book data and real post-only fills."
+},
+{
+"k": "h2",
+"t": "C.4 Are the 240-minute horizon and the extreme-anchored stop arbitrary?"
+},
+{
+"k": "body",
+"t": "They are design choices, fixed before evaluation, and they are reported as limitations (Section 7). Searching over horizons and stop rules after seeing results would have added a further dimension of data snooping. The timeout analysis (Section 5.5) shows how the horizon interacts with barrier distance: shortening the distance removed timeouts but required a target-first rate above 93% to break even, against 37% observed."
+},
+{
+"k": "h2",
+"t": "C.5 Does the stop-first rule for same-minute ties bias results against the strategy?"
+},
+{
+"k": "body",
+"t": "It is conservative by construction. Reversing all same-minute ties optimistically did not rescue the close-bracket diagnostic. Its effect on the main streams was not separately quantified; exact intrabar replay with trade data is listed as future work. Because only trades whose stop and target fall inside a single minute are affected, and the barriers sit at the stream's running extreme or a multiple of that distance, the share of such ties is expected to be small relative to a 9-basis-point shortfall, but this is an expectation, not a measured result."
+},
+{
+"k": "h2",
+"t": "C.6 Could researcher choices across phases have hidden an edge?"
+},
+{
+"k": "body",
+"t": "Data snooping inflates apparent performance; it does not usually hide it. Every informal choice across Phases 1-5 had the freedom to find a positive result, and none produced one that survived validation. The study corrects explicitly for the 2,640-configuration scan (Phase 1), the 54 regime cells (Phases 4-5) and the nine multipliers (Section 5.6), and acknowledges that early judgments were not all prospectively registered."
+},
+{
+"k": "h2",
+"t": "C.7 Why is the 2025-2026 period not reported as a holdout?"
+},
+{
+"k": "body",
+"t": "The redesigned engines never read 2025-2026 rows, but that period had already been seen through the full-history audit of the precursor strategy (Section 3.3). Reporting it as a pristine holdout would overstate its independence, so the paper makes no confirmatory claim from it. Because no development policy passed its gates, there was also no frozen candidate to validate."
+},
+{
+"k": "h2",
+"t": "C.8 Would trading the opposite direction (fading the DC signal) work?"
+},
+{
+"k": "body",
+"t": "Unlikely. The best stream's signal path was positive before costs (+4.86 basis points), so mechanically reversing the same entries would start from an approximately negative pre-cost mean and then pay the same round-trip costs. Reversal is not exactly symmetric because stop and target geometry would be mirrored, but the starting point is unfavorable. Any such rule would also be a new, post-hoc hypothesis requiring fresh data."
+},
+{
+"k": "h2",
+"t": "C.9 Why did the original TradingView strategy look profitable?"
+},
+{
+"k": "body",
+"t": "Its short test window contained a few favorable entries, and the order logic produced partial-exit fragments that counted as separate wins. In the diagnostic version of the script, exit orders became active only one bar after entry and half of each position carried no stop until a recovery target had been touched. That raises the win rate while leaving an open-ended loss, a profile that looks smooth until a sustained adverse move. Over 2021-2026 the complete strategy lost 96.5% (ETH) and 96.7% (XRP), and its setups were negative before commission (Table 4)."
+},
+{
+"k": "h2",
+"t": "C.10 Does this contradict published DC trading results?"
+},
+{
+"k": "body",
+"t": "Not directly. Most profitable DC strategies in the literature were tested on foreign-exchange data, often with parameters optimized by genetic algorithms, and with costs well below a crypto taker's. This study tests a fixed, causal, cost-loaded implementation on crypto perpetuals and corrects for the specification search. Its result agrees with evidence that technical and machine-learning rules in cryptocurrency rarely survive frictions and data-snooping controls (Anghel, 2021)."
+},
+{
+"k": "h2",
+"t": "C.11 How reliable is the data, and could it have been altered?"
+},
+{
+"k": "body",
+"t": "All market data came from exchange endpoints and archives, verified by SHA-256 and ZIP CRC, schema, chronology, duplicate and OHLC checks, with no interpolation or synthetic candles (Section 3.2). Generative AI was used for code and drafting, never to produce or repair data. Major stages reproduced their outputs byte for byte."
+},
+{
+"k": "h2",
+"t": "C.12 Is the funding approximation material?"
+},
+{
+"k": "body",
+"t": "No, at this horizon. Funding contributed +0.07 basis points per trade on average against 13.90 basis points of execution drag (Section 4.4). Using entry price instead of mark price would matter for multi-day holds, which is why the approximation is not generalized."
+},
+{
+"k": "h2",
+"t": "C.13 Long trades did better than shorts. Is that an edge?"
+},
+{
+"k": "body",
+"t": "It is treated as a diagnostic of market drift during a strongly rising 2023-2024 sample, not as a finding. The split was observed inside failed policies and was not corrected as a standalone hypothesis (Section 6.4)."
+},
+{
+"k": "h2",
+"t": "C.14 What evidence would change the conclusion?"
+},
+{
+"k": "body",
+"t": "New information rather than new arrangements of the same price thresholds: authenticated order-flow and order-book data with a single pre-specified feature family, measured maker fills including missed fills and adverse selection, or a frozen-detector replication across additional venues and contracts. Any of these would be a new pre-registered study (Section 8)."
+},
+{
+"k": "body",
+"t": "Postscript: after this paper, the same pre-registration discipline (frozen protocols with SHA-256 fingerprints, development data to 2024 and a once-opened 2025-2026 holdout) was applied to three further ideas on Bybit data: multi-asset time-series trend following, spot-perpetual funding carry and a delta-hedged volatility-risk-premium screen. Protocols, engines and reports are in the public repository cited in the data availability statement."
+}
+]
