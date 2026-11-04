@@ -1,0 +1,120 @@
+{
+  "name": "H2 Single-Variant BTC-to-ETH/XRP Lead-Lag Test",
+  "status": "frozen_before_BTC_data_or_outcomes",
+  "program_hypothesis": 2,
+  "program_alpha": 0.02,
+  "data_availability_at_freeze": {
+    "verified_BTCUSDT_files_found": 0,
+    "synthetic_or_substitute_data_permitted": false,
+    "other_venue_data_permitted": false
+  },
+  "instruments": {
+    "leading_feature": "Bybit linear-perpetual BTCUSDT one-minute close",
+    "traded_targets": ["ETHUSDT", "XRPUSDT"],
+    "traded_target_source": "frozen verified Phase 5 candidate database"
+  },
+  "detector_family": {
+    "multipliers": [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0],
+    "reason": "The prior selection of k=1.25 did not survive a nine-way family-wise correction, so H2 must carry all nine independent detector streams as one simultaneous family.",
+    "thresholds_are_independent_event_streams": true,
+    "retrospective_threshold_assignment": false
+  },
+  "single_BTC_feature": {
+    "event_time": "ETH/XRP directional-change confirmation-bar close t",
+    "formula": "B_t = side_t * log(BTC_close_t / BTC_close_(t-5m)) / sqrt(sum_{i=t-239m}^{t} r_i^2)",
+    "btc_return_lag_minutes": 5,
+    "btc_realized_volatility_window_minutes": 240,
+    "btc_return_definition": "one-minute log close-to-close return",
+    "information_cutoff": "all BTC inputs must have timestamps less than or equal to the ETH/XRP confirmation close",
+    "missing_timestamp_rule": "event is ineligible; never forward-fill or interpolate BTC prices",
+    "direction_alignment": "multiply BTC return by target-trade side so positive values mean BTC moved in the proposed ETH/XRP direction"
+  },
+  "single_filter": {
+    "rule": "B_t at or above the 75th percentile of prior eligible events",
+    "cutoff_percentile": 0.75,
+    "lookback_calendar_days": 180,
+    "minimum_prior_events": 50,
+    "history_stratum": "same target symbol and same detector multiplier; long and short pooled after direction alignment",
+    "current_event_excluded": true,
+    "filter_before_nonoverlap_selection": true,
+    "authorized_variants": 1,
+    "alternative_lags": [],
+    "alternative_percentiles": [],
+    "alternative_volatility_windows": [],
+    "alternative_leading_assets": [],
+    "if_failed": "No nearby BTC lag, cutoff, volatility window, or leading asset may be tried under H2."
+  },
+  "trade_rules": {
+    "entry": "next ETH/XRP one-minute bar open after confirmation",
+    "stop": "detector running extreme at confirmation",
+    "reward_risk": 1.5,
+    "maximum_holding_minutes": 240,
+    "same_minute_tp_sl": "stop_first",
+    "one_open_position_per_target_symbol_per_policy": true,
+    "regime_change_while_open": "irrelevant; preserve original stop, target, and timeout"
+  },
+  "execution": {
+    "venue": "Bybit linear perpetual",
+    "entry_order": "market taker",
+    "exit_order": "market taker conservative",
+    "account_taker_fee_bp_per_fill": 5.5,
+    "entry_slippage_bp": 1.0,
+    "exit_slippage_bp": 1.0,
+    "tick_rounding": "instrument-specific adverse rounding",
+    "historical_ETH_XRP_funding": true,
+    "BTC_funding_used": false,
+    "reason_BTC_funding_unused": "BTC is an information feature, not a traded position"
+  },
+  "evaluation_period": {
+    "development_evaluation": "2023-01-01T00:00:00Z through 2024-12-31T23:59:59Z",
+    "feature_warmup_may_use": "verified BTCUSDT data before 2023",
+    "locked_2025_2026_access": false
+  },
+  "inference": {
+    "absolute_family": "nine BTC-filtered fixed-k policies",
+    "paired_improvement_family": "nine paired filtered-minus-unfiltered fixed-k comparisons",
+    "method": "four-calendar-week circular moving-block max-t bootstrap of weekly sums and counts",
+    "replicates": 20000,
+    "block_weeks": 4,
+    "simultaneous_one_sided_confidence": 0.98,
+    "random_seed": 20260903,
+    "multiple_BTC_variant_correction_needed": false,
+    "reason": "Exactly one BTC feature variant is authorized; the max-t family corrects only the nine inherited detector multipliers."
+  },
+  "required_evidence_gates": {
+    "minimum_nonoverlap_trades": 300,
+    "minimum_unique_calendar_weeks": 52,
+    "minimum_trades_each_target_asset": 75,
+    "minimum_trades_each_side": 75,
+    "minimum_profit_factor": 1.10,
+    "both_calendar_years_positive": true,
+    "minimum_positive_halfyears_out_of_four": 3,
+    "absolute_simultaneous_98_lower_bound_above_bp": 0.0,
+    "paired_improvement_simultaneous_98_lower_bound_above_bp": 0.0,
+    "additional_cost_stress_bp": 2.0,
+    "stressed_mean_must_be_positive": true,
+    "top_5_percent_winners_max_share_of_positive_pnl": 0.50,
+    "all_gates_required": true
+  },
+  "candidate_selection_if_multiple_pass": {
+    "primary": "largest absolute simultaneous 98% lower confidence bound",
+    "tie_breaker": "smaller detector multiplier",
+    "maximum_candidates_entering_locked_test": 1
+  },
+  "stopping_rule": {
+    "if_none_pass": "Reject H2 and do not test another BTC lag/cutoff. Preserve H3 order-flow alpha allocation unchanged.",
+    "if_one_passes": "Freeze the policy and only then request authorization to open the locked test period.",
+    "H3_substitution_allowed": false
+  },
+  "required_outputs": [
+    "BTC source-integrity audit",
+    "all event-level BTC features and causal cutoffs",
+    "all trade-level filtered policies",
+    "unfiltered matched baselines",
+    "exit-reason breakdown",
+    "fold, year, target-asset, and side stability tables",
+    "absolute and paired nine-policy max-t distributions and bounds",
+    "complete evidence-gate table",
+    "deterministic reproduction hashes"
+  ]
+}

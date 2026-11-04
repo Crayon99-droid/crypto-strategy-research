@@ -1,0 +1,89 @@
+{
+  "research_name": "Bybit Six-Regime Volatility-Normalized Directional Change v1",
+  "symbols": ["ETHUSDT", "XRPUSDT"],
+  "development_start": "2021-01-01T00:00:00Z",
+  "development_end_exclusive": "2025-01-01T00:00:00Z",
+  "locked_test_start": "2025-01-01T00:00:00Z",
+  "locked_test_end_exclusive": "2027-01-01T00:00:00Z",
+  "threshold_multipliers": [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0],
+  "detector": {
+    "extreme_source": "bar_high_low",
+    "confirmation_source": "bar_close",
+    "signal_timing": "bar_close",
+    "entry_timing": "next_bar_open",
+    "pivot_threshold_parameter": "theta_t",
+    "reversal_threshold_parameter": "theta_t",
+    "parameters_explicitly_coupled_for_baseline": true,
+    "new_leg_start_after_reversal": "signal_bar_close"
+  },
+  "volatility": {
+    "intraday_window_minutes": 240,
+    "intraday_estimator": "sample_std_log_returns_times_sqrt_window",
+    "daily_estimator": "median_intraday_rv240",
+    "threshold_sigma_source": "previous_completed_utc_day",
+    "regime_lookback_days": 180,
+    "regime_min_history_days": 30,
+    "regime_quantiles": [0.33, 0.67],
+    "threshold_formula": "theta_t = multiplier * previous_completed_day_median_rv240"
+  },
+  "structure": {
+    "score": "abs(return240_bp / rv240_bp)",
+    "trend_enter": 0.75,
+    "trend_exit": 0.25,
+    "hysteresis": true
+  },
+  "trade": {
+    "stop": "detector_running_extreme_at_confirmation",
+    "reward_risk": 1.0,
+    "maximum_holding_minutes": 240,
+    "same_minute_tp_sl": "stop_first",
+    "regime_transition_while_open": "hold_original_stop_target_and_exit_rules"
+  },
+  "execution": {
+    "venue": "Bybit linear perpetual",
+    "entry_order": "market_taker",
+    "exit_order": "market_taker_conservative",
+    "taker_fee_bp_per_fill": 5.5,
+    "entry_slippage_bp": 1.0,
+    "exit_slippage_bp": 1.0,
+    "funding_source": "verified_historical_funding_rate",
+    "funding_notional_approximation": "entry_notional because historical mark-price series is unavailable",
+    "price_rounding": "instrument_tick_size_adverse"
+  },
+  "regimes": [
+    "low_range", "low_trend", "normal_range", "normal_trend", "high_range", "high_trend"
+  ],
+  "evidence_gate": {
+    "minimum_nonoverlap_trades": 200,
+    "minimum_calendar_weeks": 26,
+    "minimum_training_halfyears": 4,
+    "minimum_trades_per_halfyear": 30,
+    "minimum_positive_halfyear_fraction": 0.75,
+    "minimum_trades_per_asset": 50,
+    "minimum_trades_per_side": 50,
+    "profit_factor_above": 1.0,
+    "simultaneous_familywise_lower_95_above_bp": 0.0,
+    "no_trade_if_none_pass": true
+  },
+  "inference": {
+    "method": "four-calendar-week moving-block max-t bootstrap",
+    "replicates": 10000,
+    "block_weeks": 4,
+    "familywise_confidence": 0.95,
+    "random_seed": 20260902,
+    "family_size": 54
+  },
+  "walk_forward_folds": [
+    {"name": "2023 H1", "start": "2023-01-01T00:00:00Z", "end": "2023-07-01T00:00:00Z"},
+    {"name": "2023 H2", "start": "2023-07-01T00:00:00Z", "end": "2024-01-01T00:00:00Z"},
+    {"name": "2024 H1", "start": "2024-01-01T00:00:00Z", "end": "2024-07-01T00:00:00Z"},
+    {"name": "2024 H2", "start": "2024-07-01T00:00:00Z", "end": "2025-01-01T00:00:00Z"}
+  ],
+  "notes": [
+    "Each multiplier is a separate directional-change event stream with its own running extreme and trade timeline.",
+    "Thresholds are never assigned retrospectively from outcomes.",
+    "The policy is unified across long and short; side is used only for required evidence coverage and diagnostics.",
+    "ETH and XRP are pooled only after symbol-relative volatility normalization.",
+    "2025-2026 is sealed and must not be read unless a development policy passes its preregistered gate."
+  ]
+}

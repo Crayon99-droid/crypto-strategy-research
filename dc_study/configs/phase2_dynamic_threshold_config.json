@@ -1,0 +1,74 @@
+{
+  "research_name": "Bybit Dynamic Directional-Change Probability Policy v1",
+  "source_database": "dc_discovery_2021_2023.sqlite",
+  "discovery_end_exclusive": "2024-01-01T00:00:00Z",
+  "label": {
+    "stop_distance": "detector_threshold",
+    "reward_risk": 1.0,
+    "maximum_holding_minutes": 240,
+    "same_minute_tp_sl_policy": "stop_first"
+  },
+  "execution": {
+    "entry": "next_minute_open_with_phase1_adverse_tick_rounding",
+    "round_trip_taker_fees_bp": 11.0,
+    "exit_slippage_bp": 1.0,
+    "entry_slippage": "embedded_in_phase1_entry_price",
+    "funding": "historical_if_crossed"
+  },
+  "walk_forward_folds": [
+    {
+      "name": "2022_H1",
+      "test_start": "2022-01-01T00:00:00Z",
+      "test_end_exclusive": "2022-07-01T00:00:00Z"
+    },
+    {
+      "name": "2022_H2",
+      "test_start": "2022-07-01T00:00:00Z",
+      "test_end_exclusive": "2023-01-01T00:00:00Z"
+    },
+    {
+      "name": "2023_H1",
+      "test_start": "2023-01-01T00:00:00Z",
+      "test_end_exclusive": "2023-07-01T00:00:00Z"
+    },
+    {
+      "name": "2023_H2",
+      "test_start": "2023-07-01T00:00:00Z",
+      "test_end_exclusive": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "calibration_lookback_days": 90,
+  "models": {
+    "logistic": {
+      "regularization_c": 0.2,
+      "max_iterations": 500
+    },
+    "hist_gradient_boosting": {
+      "learning_rate": 0.05,
+      "max_iterations": 160,
+      "max_leaf_nodes": 31,
+      "minimum_samples_leaf": 200,
+      "l2_regularization": 1.0
+    }
+  },
+  "policy": {
+    "minimum_predicted_expected_net_bp": 5.0,
+    "diagnostic_expected_value_hurdles_bp": [0.0, 5.0, 10.0, 20.0, 30.0, 50.0],
+    "maximum_open_positions_per_symbol": 1,
+    "same_timestamp_choice": "highest_predicted_expected_net_bp",
+    "payoff_lookup_minimum_group_observations": 20
+  },
+  "statistics": {
+    "minimum_reported_observations": 30,
+    "weekly_block_bootstrap_trials": 5000,
+    "random_seed": 20260823
+  },
+  "notes": [
+    "The primary Phase 2 test isolates threshold selection; TP/SL optimization is deferred.",
+    "Every feature is known at or before the signal close.",
+    "Each fold trains only on data earlier than its calibration and test intervals.",
+    "The final 90 days before each test fold are used only for probability calibration and payoff lookup.",
+    "Rows sharing a market episode are down-weighted so simultaneous threshold variants do not dominate model fitting.",
+    "No 2024 or later outcome is read by this configuration."
+  ]
+}

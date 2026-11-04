@@ -1,0 +1,66 @@
+{
+  "research_name": "Bybit Regime-to-Threshold Response Study v1",
+  "symbols": ["ETHUSDT", "XRPUSDT"],
+  "discovery_start": "2021-01-01T00:00:00Z",
+  "discovery_end_exclusive": "2025-01-01T00:00:00Z",
+  "validation_start": "2023-01-01T00:00:00Z",
+  "validation_end_exclusive": "2025-01-01T00:00:00Z",
+  "locked_test_start": "2025-01-01T00:00:00Z",
+  "locked_test_end_exclusive": "2026-08-22T19:17:00Z",
+  "detector_thresholds_bp": [25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500],
+  "stop_distances_bp": [25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500],
+  "reward_risk_ratios": [1.0],
+  "outcome_horizons_minutes": [15, 30, 60, 120, 240],
+  "maximum_outcome_horizon_minutes": 240,
+  "realized_volatility_windows_minutes": [15, 60, 240],
+  "atr_windows_minutes": [14, 60],
+  "return_windows_minutes": [1, 5, 15, 60, 240],
+  "volume_zscore_windows_minutes": [20, 60],
+  "execution": {
+    "entry_order": "market_taker",
+    "exit_order": "market_taker_conservative",
+    "taker_fee_bp_per_fill": 5.5,
+    "entry_slippage_bp": 1.0,
+    "exit_slippage_bp": 1.0,
+    "same_bar_tp_sl_policy": "stop_first",
+    "signal_timing": "bar_close",
+    "entry_timing": "next_bar_open"
+  },
+  "regime": {
+    "volatility_source": "previous_completed_utc_day_median_rv240_bp",
+    "volatility_lookback_days": 180,
+    "volatility_min_history_days": 30,
+    "volatility_quantiles": [0.33, 0.67],
+    "trend_score": "return240_bp / rv240_bp",
+    "trend_entry_abs": 0.75,
+    "trend_exit_abs": 0.25,
+    "volatility_transition_short_days": 5,
+    "volatility_transition_long_days": 20,
+    "volatility_contracting_ratio": 0.90,
+    "volatility_expanding_ratio": 1.10,
+    "primary_states": 9,
+    "detail_states": 27
+  },
+  "threshold_evidence_gate": {
+    "minimum_nonoverlap_trades": 100,
+    "minimum_weekly_clusters": 12,
+    "positive_mean_required": true,
+    "profit_factor_above": 1.0,
+    "one_sided_clustered_lower_confidence": 0.90,
+    "minimum_positive_halfyear_fraction": 0.60,
+    "minimum_trades_per_evaluated_halfyear": 30,
+    "no_trade_if_none_pass": true
+  },
+  "walk_forward_folds": [
+    {"name": "2023 H1", "start": "2023-01-01T00:00:00Z", "end": "2023-07-01T00:00:00Z"},
+    {"name": "2023 H2", "start": "2023-07-01T00:00:00Z", "end": "2024-01-01T00:00:00Z"},
+    {"name": "2024 H1", "start": "2024-01-01T00:00:00Z", "end": "2024-07-01T00:00:00Z"},
+    {"name": "2024 H2", "start": "2024-07-01T00:00:00Z", "end": "2025-01-01T00:00:00Z"}
+  ],
+  "notes": [
+    "This phase estimates realized threshold response inside causally identified regimes; it does not use predicted expectancy.",
+    "A regime receives no trade when no threshold passes the frozen evidence gates.",
+    "The same unified policy serves long and short signals; side is diagnostic, not a separate model.",
+    "2025-2026 remains locked and is not read by this phase."
+  ]
+}

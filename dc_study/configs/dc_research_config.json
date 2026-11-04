@@ -1,0 +1,36 @@
+{
+  "research_name": "Bybit Dynamic Directional Change Discovery v1",
+  "symbols": ["ETHUSDT", "XRPUSDT"],
+  "discovery_start": "2021-01-01T00:00:00Z",
+  "discovery_end_exclusive": "2024-01-01T00:00:00Z",
+  "validation_start": "2024-01-01T00:00:00Z",
+  "validation_end_exclusive": "2025-01-01T00:00:00Z",
+  "locked_test_start": "2025-01-01T00:00:00Z",
+  "locked_test_end_exclusive": "2026-08-22T19:17:00Z",
+  "detector_thresholds_bp": [25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500],
+  "stop_distances_bp": [25, 50, 75, 100, 150, 200],
+  "reward_risk_ratios": [1.0, 1.5, 2.0, 2.5],
+  "outcome_horizons_minutes": [15, 30, 60, 120, 240],
+  "maximum_outcome_horizon_minutes": 240,
+  "realized_volatility_windows_minutes": [15, 60, 240],
+  "atr_windows_minutes": [14, 60],
+  "return_windows_minutes": [1, 5, 15, 60, 240],
+  "volume_zscore_windows_minutes": [20, 60],
+  "execution": {
+    "entry_order": "market_taker",
+    "exit_order": "market_taker_conservative",
+    "taker_fee_bp_per_fill": 5.5,
+    "entry_slippage_bp": 1.0,
+    "exit_slippage_bp": 1.0,
+    "same_bar_tp_sl_policy": "stop_first",
+    "signal_timing": "bar_close",
+    "entry_timing": "next_bar_open"
+  },
+  "notes": [
+    "All detector states advance chronologically using only current and past bars.",
+    "The outcome label may use future bars, but no future value is stored as an entry feature.",
+    "Each threshold is an independent directional-change detector.",
+    "Rows sharing a market_episode_id must remain together during resampling or model validation.",
+    "2024 is validation data and 2025-2026 is locked test data; neither is used by the first discovery run."
+  ]
+}

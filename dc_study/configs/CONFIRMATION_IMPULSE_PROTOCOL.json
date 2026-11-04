@@ -1,0 +1,83 @@
+{
+  "name": "Fixed k=1.25 Confirmation-Impulse Selectivity Hypothesis",
+  "frozen_before_selectivity_outcomes": true,
+  "hypothesis_number": 1,
+  "program_alpha_allocation": 0.02,
+  "purpose": "Test whether an unusually forceful confirmation bar concentrates the weak fixed-k directional-change effect into fewer trades that survive actual Bybit taker costs.",
+  "inputs": {
+    "candidate_database": "phase5/phase5_candidates_2021_2024.sqlite",
+    "candidate_archive": "phase5/phase5_candidates_2021_2024.sqlite.gz",
+    "candidate_archive_expected_sha256": "291f6f90d7f5af8306c8aa9a52954b0f36cf2db6796e59221a94498018909f89",
+    "baseline_trade_file": "phase5/results/phase5_walkforward_trades.csv.gz",
+    "baseline_trade_expected_sha256": "853f554466e6d6892304774aba28562b9f2d78b02862039da4eb8700172f9a8f",
+    "data_directory": "phase3/materialized/Find Algo",
+    "symbols": ["ETHUSDT", "XRPUSDT"],
+    "candle_years": [2021, 2022, 2023, 2024],
+    "locked_2025_2026_rows_read": 0
+  },
+  "frozen_strategy": {
+    "detector_multiplier": 1.25,
+    "reward_risk": 1.5,
+    "maximum_holding_minutes": 240,
+    "entry": "next-minute market taker with Phase 5 tick/slippage rules",
+    "exit": "Phase 5 target, stop, timeout, funding, tick and slippage rules",
+    "fee_bp_per_fill": 5.5,
+    "policy": "unified across both assets and both sides"
+  },
+  "feature": {
+    "name": "confirmation_impulse",
+    "formula": "side * log(close_t / close_t_minus_1) / ewma_sigma_t_minus_1",
+    "ewma_sigma": {
+      "source": "one-minute log returns",
+      "half_life_minutes": 60,
+      "adjust": false,
+      "minimum_prior_observations": 240,
+      "current_confirmation_return_excluded": true
+    }
+  },
+  "filter": {
+    "cutoff": "75th percentile",
+    "history": "prior fixed-k=1.25 eligible DC events for the same symbol",
+    "directions_pooled": true,
+    "lookback_calendar_days": 180,
+    "minimum_prior_events": 50,
+    "current_event_excluded": true,
+    "apply_before_nonoverlap_selection": true,
+    "alternate_cutoffs_authorized": false,
+    "alternate_price_features_authorized_if_fail": false
+  },
+  "development_folds": [
+    {"name": "2023 H1", "start": "2023-01-01T00:00:00Z", "end": "2023-07-01T00:00:00Z"},
+    {"name": "2023 H2", "start": "2023-07-01T00:00:00Z", "end": "2024-01-01T00:00:00Z"},
+    {"name": "2024 H1", "start": "2024-01-01T00:00:00Z", "end": "2024-07-01T00:00:00Z"},
+    {"name": "2024 H2", "start": "2024-07-01T00:00:00Z", "end": "2025-01-01T00:00:00Z"}
+  ],
+  "inference": {
+    "method": "four-calendar-week moving-block bootstrap over the 105 consecutive development weeks",
+    "replicates": 20000,
+    "block_weeks": 4,
+    "random_seed": 20260902,
+    "one_sided_lower_confidence": 0.98,
+    "paired_comparison": "filtered mean return per trade minus unfiltered fixed-k=1.25 mean return per trade under identical resampled weeks"
+  },
+  "evidence_gates": {
+    "minimum_nonoverlap_trades": 300,
+    "minimum_unique_trade_weeks": 52,
+    "minimum_trades_each_asset": 75,
+    "minimum_trades_each_side": 75,
+    "minimum_profit_factor": 1.10,
+    "positive_2023_and_2024": true,
+    "minimum_positive_halfyears": 3,
+    "absolute_98_lower_bound_above_bp": 0.0,
+    "paired_98_lower_bound_above_bp": 0.0,
+    "additional_cost_stress_bp": 2.0,
+    "stressed_mean_above_bp": 0.0,
+    "maximum_best_5pct_share_of_total_positive_pnl": 0.50,
+    "all_gates_required": true
+  },
+  "decision": {
+    "pass": "Freeze one candidate for locked 2025+ testing; no parameter changes.",
+    "fail": "Terminate further OHLC-only selectivity filters on this DC stream and move to the single preregistered BTC lead-lag hypothesis.",
+    "no_post_outcome_modification": true
+  }
+}
