@@ -14,10 +14,14 @@ backtest artifact.
 | Volatility premium | Delta-hedged short 30-day straddles priced off Deribit DVOL | 15.0%/yr, passed all gates | 0.7%/yr (base), -7.1%/yr (stress) | Premium has faded |
 | Token unlocks | Short before team/investor cliff unlocks | Only 6 verifiable events from free sources | - | Not testable for free |
 
-Full reports: [`reports/`](reports). Earlier work: a directional-change strategy
-that looked profitable in TradingView was rebuilt in Python and rejected over the
-full 2021-2026 history (`pine/` holds the original script with its exit-mode
-diagnostics).
+Full reports: [`reports/`](reports).
+
+**Working paper:** [From Apparent Profit to a Reproducible Null Result](paper/Directional_Change_Crypto_Null_Result_Tariq_2026.pdf)
+(Rayan Tariq, 2026). A directional-change strategy that looked profitable in
+TradingView was rebuilt in Python and rejected over the full 2021-2026 history,
+then redesigned as a causal event study with regime maps, a dynamic ML threshold
+model and family-wise multiple-testing control. `pine/` holds the original script
+with its exit-mode diagnostics.
 
 ## Method
 
@@ -47,6 +51,7 @@ results/      machine-readable results (JSON)
 data_tools/   Bybit + Deribit downloaders with gap/OHLC audits; data fingerprints
 unlocks/      token-unlock selection rules, universe, event table with sources
 pine/         original TradingView strategy (directional change, exit diagnostics)
+paper/        working paper on directional-change trading (PDF)
 ```
 
 ## Reproduce
