@@ -18,6 +18,10 @@ Code and frozen configurations behind the working paper
 | H1 confirmation-impulse filter | `confirmation_impulse_selectivity.py` | `CONFIRMATION_IMPULSE_PROTOCOL.json` |
 | H2 BTC lead-lag filter | `h2_btc_lead_lag.py` | `BTC_LEAD_LAG_PROTOCOL.json` |
 
+`reports/` holds the decision reports written at each gate: Phase 4 and its 4.1
+diagnostic amendment, the Phase 5 final report, the cost-sensitivity gate, the
+nine-k selection and 98% inference amendment, and the H2 BTC lead-lag report.
+
 `verify_*` scripts re-check frozen checkpoints (hashes, row counts, deterministic
 reruns) before later stages read them.
 
