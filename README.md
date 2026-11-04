@@ -16,6 +16,9 @@ backtest artifact.
 
 Full reports: [`reports/`](reports).
 
+**Related study:** [Liquidity-magnet price levels in Bitcoin perpetuals](https://github.com/Crayon99-droid/magnet-price-levels-study),
+geometry nulls, mirror placebos and cost-aware entry tests (separate repository and paper).
+
 **Working paper:** [From Apparent Profit to a Reproducible Null Result](paper/Directional_Change_Crypto_Null_Result_Tariq_2026.pdf)
 (Rayan Tariq, 2026). A directional-change strategy that looked profitable in
 TradingView was rebuilt in Python and rejected over the full 2021-2026 history,
