@@ -1,0 +1,5 @@
+bybit_data/
+*.csv.gz
+__pycache__/
+*.pyc
+.DS_Store

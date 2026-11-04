@@ -1,0 +1,23 @@
+token,perp_launch,first_team_investor_cliff,tokens_unlocked,recipients,pct_circulating_at_event,grade,status,source,notes
+ARB,2023-03-23,2024-03-16,1.11B,team+advisors+investors,76.6,CLEAR,include,https://www.fxstreet.com/cryptocurrencies/news/arbitrum-price-readies-for-one-of-the-biggest-token-unlocks-of-2024-202403130200,
+BLUR,2023-02-15,2023-06-14,196M,core contributors+investors+advisors,~40 (supply increase),CLEAR,include,https://www.theblock.co/news/web3/2023-06-13-blur-token-unlock-40-percent-234422,
+PYTH,2023-11-21,2024-05-20,2.13B,ecosystem+protocol devs+early backers,~142,CLEAR,include,https://www.theblock.co/news/markets/2024-04-28-may-preview-1-25-billion-pyth-unlock-leads-major-token-unlocks-from-avalanche-aptos-arbitrum-and-more-291313,mixed recipients incl. non-insiders
+MEME,2023-11-03,2024-05-03,~$148M,investors+advisors,8.3,CLEAR,include,https://www.theblock.co/news/markets/2024-04-28-may-preview-1-25-billion-pyth-unlock-leads-major-token-unlocks-from-avalanche-aptos-arbitrum-and-more-291313,
+TIA,2023-10-31,2024-10-30,175M,core contributors+seed+series A/B,~80,CLEAR,include,https://hotfix.coindesk.com/markets/2024/10/29/celestias-tia-braces-for-price-volatility-amid-900m-token-unlock,
+JTO,2023-12-07,2024-12-06,135.7M,core contributors+investors,pending (contemporary circulating needed),CLEAR date/amount,include,https://defillama.com/unlocks/jito,% of float on page uses current supply
+WLD,2023-07-24,2024-07-24,n/a,team+investors,n/a,-,exclude,https://www.theblock.co/post/305632/worldcoin-token-jumps-20-with-unlock-for-early-contributors-starting-next-week-period-extended,no lump cliff (daily linear) and schedule changed
+ARKM,2023-07-28,2024-07-17?,n/a,contributors+investors+advisors,n/a,-,likely exclude,https://defillama.com/unlocks/arkham,released weekly; no lump cliff visible
+EDU,2023-05-05,?,?,team (24m cliff) / early contributors delayed 3m,?,-,flag: schedule changed,https://www.chaincatcher.com/en/article/2095960,
+ID,2023-03-24,?,?,?,?,-,pending,,Sep 2023 cliff was community/ecosystem only
+SUI,2023-05-02,?,?,series A/B/early contributors,?,-,pending,https://web3.bitget.com/en/academy/sui-token-unlock-schedule-key-dates-vesting-periods-and-price-impact,
+SEI,2023-08-16,?,?,team/private sale,?,-,pending,,
+MAV,2023-06-28,?,?,insiders/private sale,?,-,pending,https://defillama.com/unlocks/maverick-protocol,no past insider dates shown
+MAVIA,2024-02-07,2024-05-06,7.66M,presale investors+gameplay rewards+community+ecosystem,25.1,CLEAR date/size; mixed recipients,flag,https://www.fxstreet.com/amp/cryptocurrencies/news/mavia-hft-eul-gal-holders-brace-for-volatility-ahead-of-55million-worth-of-cliff-token-unlocks-next-week-202405040200,later unlocks delayed by project
+STRK,2024-02-20,2024-04-15,64M,early contributors+investors,~8.8,INFERRED (start of monthly release),include-secondary,https://www.fxstreet.com/amp/cryptocurrencies/news/aevo-apt-arb-among-133-billion-worth-of-token-unlocks-lined-up-for-next-week-202405110200,no lump; monthly 64M from Apr 2024
+ONDO,2024-01-22,2025-01-18,~1.94B (20% of supply),locked holders (global lock-up),~134,CLEAR date; recipients vague,include (holdout),https://www.fxstreet.com/amp/cryptocurrencies/news/ondo-price-forecast-20-ondo-unlock-on-january-18-202501130539,
+DYM,2024-02-07,n/a,n/a,team+backers,n/a,-,exclude,https://docs.dymension.xyz/learn/dym/distribution,12m lockup then linear: no lump cliff
+AEVO,2024-03-13,2024-05-15,827.6M,not stated,n/a,-,exclude,https://www.fxstreet.com/amp/cryptocurrencies/news/aevo-apt-arb-among-133-billion-worth-of-token-unlocks-lined-up-for-next-week-202405110200,token migrated from RBN (traded since 2021): fails filter 1
+APT,2022-10-18,?,24.8M monthly,core contributors+investors+community+foundation,8.9 (Dec 2023 monthly),-,unresolved,https://www.theblock.co/news/ecosystems/2023-12-12-aptos-token-unlock-200-million-usd-267171,first insider release date not found
+ID,2023-03-24,?,?,?,?,-,unresolved,https://www.fxstreet.com/amp/cryptocurrencies/news/id-ctsi-and-ygg-over-30-million-worth-of-cliff-token-unlocks-to-watch-next-week-202404200200,found unlocks were ecosystem/foundation only
+CYBER,2023-08-15,?,?,?,?,-,unresolved,https://www.fxstreet.com/cryptocurrencies/news/cyberconnect-price-could-fall-10-as-965-million-worth-of-cyber-tokens-due-to-flood-markets-in-cliff-unlock-202401131222,Jan 2024 unlock: treasury/ecosystem/public sale
+JUP,2024-01-31,?,?,team,?,-,unresolved,https://defillama.com/unlocks/jupiter,free page shows only 2026 events
