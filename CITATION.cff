@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite the working paper below."
+title: "Crypto Strategy Research"
+authors:
+  - family-names: Tariq
+    given-names: Rayan
+repository-code: "https://github.com/Crayon99-droid/crypto-strategy-research"
+license: MIT
+preferred-citation:
+  type: report
+  title: "From Apparent Profit to a Reproducible Null Result: A Cost-Aware Evaluation of Directional-Change Reversal Trading in Cryptocurrency Perpetual Futures"
+  authors:
+    - family-names: Tariq
+      given-names: Rayan
+  year: 2026
+  doi: "10.5281/zenodo.23965288"
+  publisher:
+    name: Zenodo

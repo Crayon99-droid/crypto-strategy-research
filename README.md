@@ -17,10 +17,11 @@ backtest artifact.
 Full reports: [`reports/`](reports).
 
 **Related study:** [Liquidity-magnet price levels in Bitcoin perpetuals](https://github.com/Crayon99-droid/magnet-price-levels-study),
-geometry nulls, mirror placebos and cost-aware entry tests (separate repository and paper).
+geometry nulls, mirror placebos and cost-aware entry tests (separate repository and paper,
+DOI [10.5281/zenodo.23965420](https://doi.org/10.5281/zenodo.23965420)).
 
 **Working paper:** [From Apparent Profit to a Reproducible Null Result](paper/Directional_Change_Crypto_Null_Result_Tariq_2026.pdf)
-(Rayan Tariq, 2026). A directional-change strategy that looked profitable in
+(Rayan Tariq, 2026), DOI [10.5281/zenodo.23965288](https://doi.org/10.5281/zenodo.23965288). A directional-change strategy that looked profitable in
 TradingView was rebuilt in Python and rejected over the full 2021-2026 history,
 then redesigned as a causal event study with regime maps, a dynamic ML threshold
 model and family-wise multiple-testing control. `pine/` holds the original script
