@@ -103,8 +103,9 @@ def binance_oi(s):   # Binance keeps 30 days only -> must run at least every few
         if len(r)<500: break
     return n
 
-JOBS=[("binance_oi",binance_syms,binance_oi),("binance_funding",binance_syms,binance_funding),
-      ("bybit_funding",bybit_syms,bybit_funding),("gate_funding",gate_syms,gate_funding),("okx_funding",okx_syms,okx_funding),("hl_funding",hl_syms,hl_funding)]
+# reachable-from-GitHub first; Binance/Bybit are geo-blocked on most runners (Binance history comes from data.binance.vision instead)
+JOBS=[("okx_funding",okx_syms,okx_funding),("hl_funding",hl_syms,hl_funding),("gate_funding",gate_syms,gate_funding),
+      ("binance_oi",binance_syms,binance_oi),("bybit_funding",bybit_syms,bybit_funding),("binance_funding",binance_syms,binance_funding)]
 if __name__=="__main__":
     only=sys.argv[1:]
     for name,lister,fn in JOBS:
