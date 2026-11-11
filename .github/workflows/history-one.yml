@@ -1,0 +1,20 @@
+name: history-one
+on:
+  workflow_dispatch:
+    inputs: { job: { description: 'history job name', default: 'gate_funding' } }
+permissions: { contents: write }
+concurrency: { group: 'history-one-${{ github.event.inputs.job }}', cancel-in-progress: false }
+jobs:
+  hist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 market_recorder/history.py ${{ github.event.inputs.job }}
+        env: { PYTHONPATH: market_recorder, BUDGET_S: '3000' }
+      - name: commit
+        if: always()
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          git add data/market/hist; git commit -qm "history ${{ github.event.inputs.job }} $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          for i in 1 2 3 4 5 6; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%15+3)); done
