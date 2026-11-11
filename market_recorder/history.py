@@ -81,6 +81,17 @@ def hl_funding(s):
         st=int(r[-1]["time"])+1
         if len(r)<500: break
     return n
+def gate_syms():
+    return sorted(c["name"] for c in get("https://api.gateio.ws/api/v4/futures/usdt/contracts") if not c.get("in_delisting"))
+def gate_funding(s):
+    p=path("funding","gate",s[:-5]); st=(last_ts(p) or START-1000)//1000+1; n=0
+    while not out_of_time():
+        to=min(st+999*3600, int(time.time()))
+        r=get("https://api.gateio.ws/api/v4/futures/usdt/funding_rate",{"contract":s,"from":st,"to":to,"limit":1000}); time.sleep(0.12)
+        if r: n+=append(p,[(int(x["t"])*1000,x["r"]) for x in r],["ts","rate"])
+        st=to+1
+        if to>=int(time.time())-60: break
+    return n
 # ---------- open interest (hourly) ----------
 def binance_oi(s):   # Binance keeps 30 days only -> must run at least every few weeks
     p=path("oi","binance",s[:-4]); st=max((last_ts(p) or 0)+1, int(time.time()*1000)-29*86400000); n=0
@@ -93,7 +104,7 @@ def binance_oi(s):   # Binance keeps 30 days only -> must run at least every few
     return n
 
 JOBS=[("binance_oi",binance_syms,binance_oi),("binance_funding",binance_syms,binance_funding),
-      ("bybit_funding",bybit_syms,bybit_funding),("okx_funding",okx_syms,okx_funding),("hl_funding",hl_syms,hl_funding)]
+      ("bybit_funding",bybit_syms,bybit_funding),("gate_funding",gate_syms,gate_funding),("okx_funding",okx_syms,okx_funding),("hl_funding",hl_syms,hl_funding)]
 if __name__=="__main__":
     only=sys.argv[1:]
     for name,lister,fn in JOBS:

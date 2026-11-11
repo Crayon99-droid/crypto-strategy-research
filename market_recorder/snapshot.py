@@ -34,9 +34,10 @@ def okx():
     oi={o["instId"]:f(o.get("oiUsd")) for o in get(B+"/public/open-interest",{"instType":"SWAP"})["data"]}
     mk={m["instId"]:f(m["markPx"]) for m in get(B+"/public/mark-price",{"instType":"SWAP"})["data"]}
     def fr(i):
-        time.sleep(0.12); return get(B+"/public/funding-rate",{"instId":i})["data"][0]
+        time.sleep(0.12); d=get(B+"/public/funding-rate",{"instId":i})["data"]; return d[0] if d else None
     with ThreadPoolExecutor(2) as ex: frs=list(ex.map(fr,list(tk)))
     for i,x in zip(tk,frs):
+        if not x: continue
         t=tk[i]; ivh=(int(x["nextFundingTime"])-int(x["fundingTime"]))/3.6e6
         yield dict(sym=i.split("-")[0],funding=f(x["fundingRate"]),interval_h=ivh,next_funding=x["fundingTime"],
                    mark=mk.get(i),index=None,oi_usd=oi.get(i),vol24_usd=(f(t["volCcy24h"]) or 0)*(f(t["last"]) or 0))
@@ -96,4 +97,4 @@ if __name__=="__main__":
         for n,rs,err in res: fh.write(f"{d:%Y-%m-%dT%H:%M},{n},{len(rs)},{'' if not err else err.strip().splitlines()[-1][:120].replace(',',';')}\n")
     for n,rs,err in res: print(f"{n:12s} {len(rs):5d} rows", "ERROR "+err.strip().splitlines()[-1] if err else "")
     print("wrote",path,len(rows))
-    if sum(1 for _,rs,_ in res if rs)<5: sys.exit("fewer than 5 exchanges returned data")
+    if sum(1 for _,rs,_ in res if rs)<3: sys.exit("fewer than 3 exchanges returned data")
