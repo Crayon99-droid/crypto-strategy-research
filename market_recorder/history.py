@@ -83,15 +83,17 @@ def hl_funding(s):
     return n
 def gate_syms():
     return sorted(c["name"] for c in get("https://api.gateio.ws/api/v4/futures/usdt/contracts") if not c.get("in_delisting"))
-def gate_funding(s):
-    p=path("funding","gate",s[:-5]); st=(last_ts(p) or START-1000)//1000+1; n=0
+def gate_funding(s):   # Gate: 'from' limited to 180 days back, so page backwards with 'to'
+    p=path("funding","gate",s[:-5]); lt=(last_ts(p) or START-1)//1000; to=int(time.time()); rows=[]
     while not out_of_time():
-        to=min(st+999*3600, int(time.time()))
-        r=get("https://api.gateio.ws/api/v4/futures/usdt/funding_rate",{"contract":s,"from":st,"to":to,"limit":1000}); time.sleep(0.12)
-        if r: n+=append(p,[(int(x["t"])*1000,x["r"]) for x in r],["ts","rate"])
-        st=to+1
-        if to>=int(time.time())-60: break
-    return n
+        r=get("https://api.gateio.ws/api/v4/futures/usdt/funding_rate",{"contract":s,"to":to,"limit":1000}); time.sleep(0.12)
+        if not r: break
+        rows+=[(int(x["t"])*1000,x["r"]) for x in r if int(x["t"])>lt]
+        mn=min(int(x["t"]) for x in r)
+        if mn<=lt or len(r)<1000: break
+        to=mn-1
+    else: return 0
+    return append(p,rows,["ts","rate"])
 # ---------- open interest (hourly) ----------
 def binance_oi(s):   # Binance keeps 30 days only -> must run at least every few weeks
     p=path("oi","binance",s[:-4]); st=max((last_ts(p) or 0)+1, int(time.time()*1000)-29*86400000); n=0
