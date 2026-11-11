@@ -113,9 +113,15 @@ if __name__=="__main__":
         try: syms=lister()
         except Exception as e: print(f"{name}: symbol list failed {e}"); continue
         done=added=err=0
-        for s in syms:
-            if out_of_time(): break
-            try: added+=fn(s); done+=1
-            except Exception as e: err+=1; print(f"  {name} {s}: {str(e)[:100]}")
+        from concurrent.futures import ThreadPoolExecutor
+        def one(s):
+            if out_of_time(): return None
+            try: return fn(s)
+            except Exception as e: print(f"  {name} {s}: {str(e)[:100]}"); return -1
+        with ThreadPoolExecutor(int(os.environ.get("THREADS", {"gate_funding":4,"bybit_funding":3}.get(name,1)))) as ex:
+            for r in ex.map(one, syms):
+                if r is None: continue
+                if r<0: err+=1
+                else: added+=r; done+=1
         print(f"{name:16s} symbols {done}/{len(syms)} new_rows {added} errors {err} t={time.time()-T0:.0f}s", flush=True)
         if out_of_time(): print("time budget reached; next run resumes"); break

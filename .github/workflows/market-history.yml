@@ -1,21 +1,22 @@
 name: market-history
 on:
   schedule:
-    - cron: '25 */4 * * *'    # every 4h; resumable, so skipped runs just catch up next time
+    - cron: '25 */4 * * *'    # GitHub fires this irregularly; every job resumes from its last saved row
   workflow_dispatch: {}
 permissions: { contents: write }
 concurrency: { group: market-history, cancel-in-progress: false }
 jobs:
   hist:
+    strategy: { fail-fast: false, matrix: { job: [okx_funding, hl_funding, gate_funding, binance_oi, bybit_funding] } }
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 58
     steps:
       - uses: actions/checkout@v4
-      - run: python3 market_recorder/history.py
-        env: { PYTHONPATH: market_recorder, BUDGET_S: '2700' }
+      - run: python3 market_recorder/history.py ${{ matrix.job }}
+        env: { PYTHONPATH: market_recorder, BUDGET_S: '3000' }
       - name: commit
         if: always()
         run: |
           git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
-          git add data/market/hist; git commit -qm "market history $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
-          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
+          git add data/market/hist; git commit -qm "history ${{ matrix.job }} $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          for i in 1 2 3 4 5 6; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%15+3)); done
