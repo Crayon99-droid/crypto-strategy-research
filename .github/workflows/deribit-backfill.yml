@@ -1,0 +1,22 @@
+name: deribit-trades-daily
+on:
+  schedule:
+    - cron: '19 1 * * *'     # daily: saves yesterday's complete option tape (resumable, fills any missing day)
+  workflow_dispatch:
+    inputs:
+      start: { description: 'first day (YYYY-MM-DD)', default: '2026-10-01' }
+permissions: { contents: write }
+concurrency: { group: deribit-backfill, cancel-in-progress: false }
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 deribit_recorder/backfill_trades.py ${{ github.event.inputs.start || '2026-10-01' }}
+      - name: commit
+        if: always()
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          git add data/deribit/trades_daily; git commit -qm "deribit daily trades $(date -u +%F)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done

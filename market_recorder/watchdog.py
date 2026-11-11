@@ -4,7 +4,7 @@ repo=os.environ["GITHUB_REPOSITORY"]; now=time.time(); since=dt.datetime.utcfrom
 def runs(wf):
     out=subprocess.check_output(["gh","api",f"repos/{repo}/actions/workflows/{wf}/runs?created=>{since}&per_page=100"])
     r=json.loads(out)["workflow_runs"]; return len(r), sum(x["conclusion"]=="success" for x in r)
-EXPECT={"deribit-snapshot.yml":24,"market-snapshot.yml":16,"market-history.yml":3}   # 24h minimums (well below schedule)
+EXPECT={"deribit-snapshot.yml":24,"market-snapshot.yml":16,"market-history.yml":3,"deribit-backfill.yml":1}   # 24h minimums (well below schedule)
 problems=[]; lines=[]
 for wf,mn in EXPECT.items():
     n,ok=runs(wf); lines.append(f"{wf}: {ok}/{n} successful runs in 24h (min {mn})")
@@ -26,6 +26,15 @@ if os.path.exists("data/market/health.csv"):
     for ex,k in bad.items():
         lines.append(f"{ex}: {k} failed pulls in last ~12 runs")
         if k>=6: problems.append(lines[-1])
+import glob as _g
+for cur in ("BTC","ETH"):
+    fs=sorted(_g.glob(f"data/deribit/trades_daily/{cur}/*.csv.gz"))
+    y=(dt.datetime.utcfromtimestamp(now)-dt.timedelta(days=2)).strftime("%Y-%m-%d")
+    lines.append(f"deribit {cur} daily tape: {len(fs)} days, latest {fs[-1][-17:-7] if fs else None}")
+    if not fs or fs[-1][-17:-7]<y: problems.append(lines[-1])
+bk=sorted(_g.glob("data/deribit/*/*/*/*_book.csv.gz"))
+lines.append(f"deribit book snapshots saved: {len(bk)}")
+if not bk: problems.append("no deribit book snapshots in repo")
 st="data/deribit/state.json"
 if os.path.exists(st): lines.append("deribit state: "+open(st).read().strip()[:200])
 print("\n".join(lines))
