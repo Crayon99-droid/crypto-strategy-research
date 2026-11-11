@@ -1,0 +1,13 @@
+name: data-watchdog
+on:
+  schedule:
+    - cron: '41 5 * * *'      # daily ~10:41 Pakistan time; a FAILED run = GitHub emails you
+  workflow_dispatch: {}
+permissions: { contents: read, actions: read }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 market_recorder/watchdog.py
+        env: { GH_TOKEN: '${{ github.token }}' }

@@ -1,0 +1,22 @@
+name: market-snapshot
+on:
+  schedule:
+    - cron: '13,43 * * * *'   # every 30 min; snapshots are a bonus, history job backfills funding/OI
+  workflow_dispatch: {}
+permissions: { contents: write }
+concurrency: { group: market-snapshot, cancel-in-progress: false }
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 market_recorder/snapshot.py
+        working-directory: .
+        env: { PYTHONPATH: market_recorder }
+      - name: commit
+        if: always()
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          git add data/market; git commit -qm "market snapshot $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
