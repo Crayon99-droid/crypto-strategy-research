@@ -1,8 +1,8 @@
 """Hourly Deribit options snapshot (Helios Macro). Stdlib only.
 Saves per run, for BTC and ETH:
   data/deribit/YYYY/MM/DD/HH_<CUR>_book.csv.gz    every option: OI, mark IV, prices, underlying
-  data/deribit/YYYY/MM/DD/HH_<CUR>_trades.csv.gz  option trades in the last hour (direction, size, IV, block flag)
-  data/deribit/summary.csv                        one row per currency per hour: spot, OI, call/put gamma exposure
+  data/deribit/YYYY/MM/DD/HH_<CUR>_trades.csv.gz  option trades since the previous run (backfilled up to 48h) (direction, size, IV, block flag)
+  data/deribit/summary.csv                        one row per currency per run: spot, OI, call/put gamma exposure
 Gamma is computed with Black-Scholes from Deribit's mark IV (r=0).
 call_gex / put_gex = sum(OI * gamma) * S^2 * 0.01  (USD change in delta per 1% move), kept separate so the
 dealer-sign assumption can be tested later instead of baked in."""
@@ -25,13 +25,15 @@ def write_gz(path,rows,fields):
     os.makedirs(os.path.dirname(path),exist_ok=True)
     buf=io.StringIO(); w=csv.DictWriter(buf,fieldnames=fields,extrasaction='ignore'); w.writeheader(); w.writerows(rows)
     with gzip.open(path,'wt') as f: f.write(buf.getvalue())
-now=dt.datetime.now(dt.timezone.utc).replace(minute=0,second=0,microsecond=0)
-base=f"data/deribit/{now:%Y/%m/%d}/{now:%H}"
+now=dt.datetime.now(dt.timezone.utc).replace(second=0,microsecond=0)
+base=f"data/deribit/{now:%Y/%m/%d}/{now:%H%M}"
+STATE='data/deribit/state.json'
+state=json.load(open(STATE)) if os.path.exists(STATE) else {}
 summ='data/deribit/summary.csv'; new=not os.path.exists(summ)
 os.makedirs('data/deribit',exist_ok=True)
 with open(summ,'a',newline='') as sf:
     sw=csv.writer(sf)
-    if new: sw.writerow(['ts','cur','spot','n_options','call_oi','put_oi','call_gex_usd','put_gex_usd','net_gex_usd_callpos','top_oi_strike','trades_1h','block_trades_1h','buy_call_vol','sell_call_vol','buy_put_vol','sell_put_vol'])
+    if new: sw.writerow(['ts','cur','spot','n_options','call_oi','put_oi','call_gex_usd','put_gex_usd','net_gex_usd_callpos','top_oi_strike','trades_since_last','block_trades_since_last','buy_call_vol','sell_call_vol','buy_put_vol','sell_put_vol'])
     for cur in ('BTC','ETH'):
         book=get('get_book_summary_by_currency',currency=cur,kind='option')
         rows=[];cg=pg=coi=poi=0.0; oi_by_k={}
@@ -48,7 +50,7 @@ with open(summ,'a',newline='') as sf:
               underlying=S,volume_24h=b.get('volume'),gamma=round(g,10)))
         f=list(rows[0].keys()) if rows else ['ts']
         write_gz(f'{base}_{cur}_book.csv.gz',rows,f)
-        start=int((now-dt.timedelta(hours=1)).timestamp()*1000); end=int(now.timestamp()*1000)
+        end=int(now.timestamp()*1000); start=max(state.get(cur,end-3600*1000)+1, end-48*3600*1000)  # backfill since last run (max 48h)
         tr=[];cont=True;e=end
         while cont:
             r=get('get_last_trades_by_currency_and_time',currency=cur,kind='option',start_timestamp=start,end_timestamp=e,count=1000,sorting='desc')
@@ -63,4 +65,7 @@ with open(summ,'a',newline='') as sf:
         topk=max(oi_by_k,key=oi_by_k.get) if oi_by_k else ''
         sw.writerow([now.isoformat(),cur,spot,len(rows),round(coi,2),round(poi,2),round(cg),round(pg),round(cg-pg),topk,
                      len(tr),sum(1 for t in tr if t.get('block_trade_id')),*(round(vol[k],2) for k in [('buy','C'),('sell','C'),('buy','P'),('sell','P')])])
-        print(cur,len(rows),'options',len(tr),'trades')
+        if tr: state[cur]=max(t['timestamp'] for t in tr)
+        else: state[cur]=end
+        print(cur,len(rows),'options',len(tr),'trades since',dt.datetime.fromtimestamp(start/1000,dt.timezone.utc))
+json.dump(state,open(STATE,'w'))
