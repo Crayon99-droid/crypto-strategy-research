@@ -3,3 +3,4 @@ bybit_data/
 __pycache__/
 *.pyc
 .DS_Store
+!data/**/*.csv.gz
