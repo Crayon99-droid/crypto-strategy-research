@@ -90,7 +90,7 @@ def gate_funding(s):   # Gate: 'from' limited to 180 days back, so page backward
         if not r: break
         rows+=[(int(x["t"])*1000,x["r"]) for x in r if int(x["t"])>lt]
         mn=min(int(x["t"]) for x in r)
-        if mn<=lt or len(r)<1000: break
+        if mn<=lt or len(r)<50: break      # Gate caps pages at ~100 rows
         to=mn-1
     else: return 0
     return append(p,rows,["ts","rate"])
