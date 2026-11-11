@@ -1,7 +1,5 @@
 name: market-snapshot
 on:
-  schedule:
-    - cron: '13,43 * * * *'   # every 30 min; snapshots are a bonus, history job backfills funding/OI
   workflow_dispatch: {}
 permissions: { contents: write }
 concurrency: { group: market-snapshot, cancel-in-progress: false }

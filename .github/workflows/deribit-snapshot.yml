@@ -1,7 +1,5 @@
 name: deribit-hourly-snapshot
 on:
-  schedule:
-    - cron: '7,27,47 * * * *'   # every 20 min; GitHub often delays/skips, trades are backfilled
   workflow_dispatch: {}
 permissions:
   contents: write

@@ -4,7 +4,7 @@ repo=os.environ["GITHUB_REPOSITORY"]; now=time.time(); since=dt.datetime.utcfrom
 def runs(wf):
     out=subprocess.check_output(["gh","api",f"repos/{repo}/actions/workflows/{wf}/runs?created=>{since}&per_page=100"])
     r=json.loads(out)["workflow_runs"]; return len(r), sum(x["conclusion"]=="success" for x in r)
-EXPECT={"deribit-snapshot.yml":24,"market-snapshot.yml":16,"market-history.yml":3,"deribit-backfill.yml":1}   # 24h minimums (well below schedule)
+EXPECT={"recorder-loop.yml":3,"market-history.yml":2,"deribit-backfill.yml":1}   # 24h minimums (well below schedule)
 problems=[]; lines=[]
 for wf,mn in EXPECT.items():
     n,ok=runs(wf); lines.append(f"{wf}: {ok}/{n} successful runs in 24h (min {mn})")
@@ -16,7 +16,7 @@ snap=sorted(glob.glob("data/market/snap/*/*.csv.gz"))
 if snap:
     d,h=snap[-1].split("/")[-2:]; age=(now-dt.datetime.strptime(d+h[:4],"%Y-%m-%d%H%M").replace(tzinfo=dt.timezone.utc).timestamp())/3600
     lines.append(f"latest market snapshot {d} {h[:4]} UTC ({age:.1f}h old)")
-    if age>3: problems.append(lines[-1])
+    if age>1.5: problems.append(lines[-1])
 else: problems.append("no market snapshots yet")
 if os.path.exists("data/market/health.csv"):
     rows=list(csv.DictReader(open("data/market/health.csv")))[-7*12:]

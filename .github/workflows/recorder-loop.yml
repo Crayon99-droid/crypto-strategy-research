@@ -1,0 +1,33 @@
+name: recorder-loop
+# Runs ~5h40m, snapshotting Deribit + 7 exchanges every 20 min, then re-dispatches itself.
+# GitHub's cron is unreliable for this repo (fires every 6-8h), so cron here is only a restart backup.
+on:
+  schedule:
+    - cron: '3 */2 * * *'
+  workflow_dispatch: {}
+permissions: { contents: write, actions: write }
+concurrency: { group: recorder-loop, cancel-in-progress: false }
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - name: record every 20 min
+        env: { PYTHONPATH: market_recorder }
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          END=$((SECONDS+20400))
+          while [ $SECONDS -lt $END ]; do
+            T=$SECONDS
+            python3 deribit_recorder/snapshot.py || echo "deribit failed"
+            python3 market_recorder/snapshot.py || echo "market partial"
+            git add data/deribit data/market
+            git commit -qm "snapshots $(date -u +%Y-%m-%dT%H:%MZ)" && \
+              for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
+            S=$((1200-(SECONDS-T))); [ $S -gt 0 ] && sleep $S
+          done
+      - name: restart myself
+        if: always()
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: gh api -X POST repos/${{ github.repository }}/actions/workflows/recorder-loop.yml/dispatches -f ref=main
