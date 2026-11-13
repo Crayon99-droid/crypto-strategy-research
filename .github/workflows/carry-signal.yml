@@ -1,0 +1,18 @@
+name: carry-signal
+on:
+  schedule:
+    - cron: '17 6 * * *'     # daily; GitHub may run it late, that's fine for a daily signal
+  workflow_dispatch: {}
+permissions: { contents: write, issues: write }
+jobs:
+  signal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 market_recorder/carry_signal.py
+        env: { GH_TOKEN: '${{ github.token }}' }
+      - name: commit
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          git add data/market/carry_signal.csv; git commit -qm "carry signal $(date -u +%F)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
