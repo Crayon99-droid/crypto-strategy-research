@@ -23,7 +23,9 @@ if os.path.exists("data/market/health.csv"):
     bad={}
     for r in rows:
         if r["error"] or int(r["rows"])==0: bad[r["ex"]]=bad.get(r["ex"],0)+1
+    GEO_BLOCKED={"binance","bybit"}   # refuse GitHub runners most of the time; covered by data.binance.vision / laptop data
     for ex,k in bad.items():
+        if ex in GEO_BLOCKED: lines.append(f"{ex}: {k} failed pulls (expected geo-block, ignored)"); continue
         lines.append(f"{ex}: {k} failed pulls in last ~12 runs")
         if k>=6: problems.append(lines[-1])
 import glob as _g
