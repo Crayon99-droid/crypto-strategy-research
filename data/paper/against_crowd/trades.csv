@@ -1,0 +1,3 @@
+sym,entry_time,dc_side,crowd,action,position,entry,exit_time,exit,net_bp
+BTCUSDT,2026-11-04 14:40:00,1,0.3471,follow,long,78961.0,2026-11-05 15:01:00,77733.8,-166.6
+BTCUSDT,2026-11-05 15:01:00,-1,-0.2703,fade,long,77733.8,,,
