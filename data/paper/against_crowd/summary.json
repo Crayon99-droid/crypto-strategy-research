@@ -1,0 +1,10 @@
+{
+ "data_through": "2026-11-13",
+ "closed_trades": 1,
+ "open_trades": 1,
+ "mean_net_bp": -166.6,
+ "t_stat": null,
+ "win_rate": 0.0,
+ "total_net_pct": -1.67,
+ "status": "RUNNING"
+}

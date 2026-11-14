@@ -1,0 +1,19 @@
+name: paper-against-crowd
+on:
+  schedule:
+    - cron: '43 7 * * *'     # daily; Binance publishes the previous day's files a few hours after 00:00 UTC
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q numpy pandas
+      - run: python3 paper_tests/against_crowd/against_crowd_paper.py data/paper/against_crowd
+        env: { PAPER_CACHE: /tmp/paper_cache }
+      - name: commit
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          git add data/paper/against_crowd/trades.csv data/paper/against_crowd/summary.json; git commit -qm "paper against-crowd $(date -u +%F)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
