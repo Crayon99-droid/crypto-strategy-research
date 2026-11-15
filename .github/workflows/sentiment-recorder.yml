@@ -2,7 +2,11 @@ name: sentiment-recorder
 on:
   schedule:
     - cron: '11,31,51 * * * *'   # 72 runs a day (Myfxbook free limit: 100 calls per 24 h)
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      backfill_days:
+        description: 'One-off: days of Gate history to fetch (0 = none)'
+        default: '0'
 permissions: { contents: write }
 concurrency: { group: sentiment-recorder, cancel-in-progress: false }
 jobs:
@@ -12,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 recorders/sentiment_recorder.py
         env:
+          BACKFILL_DAYS: ${{ github.event.inputs.backfill_days }}
           MYFXBOOK_EMAIL: ${{ secrets.MYFXBOOK_EMAIL }}
           MYFXBOOK_PASSWORD: ${{ secrets.MYFXBOOK_PASSWORD }}
           OANDA_TOKEN: ${{ secrets.OANDA_TOKEN }}
