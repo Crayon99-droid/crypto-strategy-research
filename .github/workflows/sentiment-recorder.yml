@@ -1,0 +1,23 @@
+name: sentiment-recorder
+on:
+  schedule:
+    - cron: '11,31,51 * * * *'   # 72 runs a day (Myfxbook free limit: 100 calls per 24 h)
+  workflow_dispatch: {}
+permissions: { contents: write }
+concurrency: { group: sentiment-recorder, cancel-in-progress: false }
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 recorders/sentiment_recorder.py
+        env:
+          MYFXBOOK_EMAIL: ${{ secrets.MYFXBOOK_EMAIL }}
+          MYFXBOOK_PASSWORD: ${{ secrets.MYFXBOOK_PASSWORD }}
+          OANDA_TOKEN: ${{ secrets.OANDA_TOKEN }}
+          OANDA_ENV: ${{ secrets.OANDA_ENV }}
+      - name: commit
+        run: |
+          git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
+          git add data/sentiment; git commit -qm "sentiment $(date -u +%FT%H:%MZ)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
