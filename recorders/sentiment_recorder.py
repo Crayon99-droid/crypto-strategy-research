@@ -1,6 +1,8 @@
 """Records retail-trader positioning for forex, indices and metals so a history exists for later tests.
 
-Sources (each optional; a source without its secret is skipped):
+Open sources (no account): Gate and Bitget publish, for their forex / index / gold perpetuals, the share of
+accounts that are long vs short (the same kind of crowd measure as Binance's long/short account ratio).
+Sources that need a secret (skipped until it exists):
   Myfxbook community outlook  - needs MYFXBOOK_EMAIL / MYFXBOOK_PASSWORD (free account, 100 calls per 24 h)
   OANDA position book         - needs OANDA_TOKEN (and OANDA_ENV = practice or live)
 Appends one row per symbol per run to data/sentiment/<source>/<YYYY-MM-DD>.csv. Never prints secrets.
@@ -31,6 +33,51 @@ def append(source, header, rows):
         if new:
             w.writerow(header)
         w.writerows(rows)
+
+
+GATE_CONTRACTS = ['EURUSD_USDT', 'GBPUSD_USDT', 'NAS100_USDT', 'SPX500_USDT', 'GER40_USDT', 'XAU_USDT', 'QQQ_USDT', 'SPY_USDT', 'BTC_USDT']
+BITGET_SYMBOLS = ['EURUSDUSDT', 'GBPUSDUSDT', 'USDJPYUSDT', 'NDX100USDT', 'XAUUSDT', 'QQQUSDT', 'SPYUSDT', 'BTCUSDT']
+
+
+def append_new(source, key, rows, tkey):
+    """Append JSON rows newer than the last saved timestamp for this key (gap-safe: each call asks for hours of history)."""
+    d = os.path.join(OUT, source)
+    os.makedirs(d, exist_ok=True)
+    sp = os.path.join(d, 'state.json')
+    state = json.load(open(sp)) if os.path.exists(sp) else {}
+    last = float(state.get(key, 0))
+    new = sorted((r for r in rows if float(r[tkey]) > last), key=lambda r: float(r[tkey]))
+    if new:
+        with open(os.path.join(d, f'{NOW:%Y-%m-%d}.jsonl'), 'a') as f:
+            for r in new:
+                f.write(json.dumps({'key': key, **r}, separators=(',', ':')) + '\n')
+        state[key] = float(new[-1][tkey])
+        json.dump(state, open(sp, 'w'), indent=0, sort_keys=True)
+    return len(new)
+
+
+def gate():
+    n, errs, first = 0, 0, ''
+    for c in GATE_CONTRACTS:
+        try:
+            rows = get('https://api.gateio.ws/api/v4/futures/usdt/contract_stats?' + urllib.parse.urlencode({'contract': c, 'interval': '5m', 'limit': 100}))
+            n += append_new('gate', c, rows, 'time')
+        except Exception as e:
+            errs += 1
+            first = first or f'{c} {type(e).__name__} {str(e)[:60]}'
+    return f'gate: {n} new rows, {errs} errors {first}'.strip()
+
+
+def bitget():
+    n, errs, first = 0, 0, ''
+    for s in BITGET_SYMBOLS:
+        try:
+            j = get('https://api.bitget.com/api/v2/mix/market/account-long-short?' + urllib.parse.urlencode({'symbol': s, 'period': '5m'}))
+            n += append_new('bitget', s, j.get('data') or [], 'ts')
+        except Exception as e:
+            errs += 1
+            first = first or f'{s} {type(e).__name__} {str(e)[:60]}'
+    return f'bitget: {n} new rows, {errs} errors {first}'.strip()
 
 
 def myfxbook():
@@ -81,7 +128,7 @@ def oanda():
 
 if __name__ == '__main__':
     status = []
-    for fn in (myfxbook, oanda):
+    for fn in (gate, bitget, myfxbook, oanda):
         try:
             status.append(fn())
         except Exception as e:
