@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: record every 20 min
-        env: { PYTHONPATH: market_recorder }
+        env: { PYTHONPATH: market_recorder, GH_TOKEN: '${{ github.token }}' }
         run: |
           git config user.name "helios-recorder"; git config user.email "helios-recorder@users.noreply.github.com"
           END=$((SECONDS+20400))
@@ -22,9 +22,15 @@ jobs:
             T=$SECONDS
             python3 deribit_recorder/snapshot.py || echo "deribit failed"
             python3 market_recorder/snapshot.py || echo "market partial"
-            git add data/deribit data/market
+            python3 recorders/sentiment_recorder.py || echo "sentiment failed"
+            git add data/deribit data/market data/sentiment
             git commit -qm "snapshots $(date -u +%Y-%m-%dT%H:%MZ)" && \
               for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep $((RANDOM%10+3)); done
+            # once a day (GitHub cron is unreliable here): start the paper test if it has not processed yesterday yet
+            NEED=$(python3 -c "import json,datetime as d; s=json.load(open('data/paper/against_crowd/summary.json')); print(int((s.get('data_through') or '') < str(d.datetime.now(d.timezone.utc).date()-d.timedelta(days=1)) and d.datetime.now(d.timezone.utc).hour>=6))" 2>/dev/null || echo 0)
+            if [ "$NEED" = "1" ] && [ $((SECONDS-${LASTPAPER:--99999})) -gt 10800 ]; then
+              gh api -X POST repos/${{ github.repository }}/actions/workflows/paper-against-crowd.yml/dispatches -f ref=main && LASTPAPER=$SECONDS
+            fi
             S=$((1200-(SECONDS-T))); [ $S -gt 0 ] && sleep $S
           done
       - name: restart myself

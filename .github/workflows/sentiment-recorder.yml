@@ -1,7 +1,6 @@
 name: sentiment-recorder
 on:
-  schedule:
-    - cron: '11,31,51 * * * *'   # 72 runs a day (Myfxbook free limit: 100 calls per 24 h)
+  # no schedule: the recorder-loop workflow runs this every 20 minutes (GitHub cron is unreliable for this repo)
   workflow_dispatch:
     inputs:
       backfill_days:

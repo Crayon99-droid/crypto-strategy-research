@@ -36,7 +36,7 @@ def append(source, header, rows):
 
 
 GATE_CONTRACTS = ['EURUSD_USDT', 'GBPUSD_USDT', 'NAS100_USDT', 'SPX500_USDT', 'GER40_USDT', 'XAU_USDT', 'QQQ_USDT', 'SPY_USDT', 'BTC_USDT']
-BITGET_SYMBOLS = ['EURUSDUSDT', 'GBPUSDUSDT', 'USDJPYUSDT', 'NDX100USDT', 'XAUUSDT', 'QQQUSDT', 'SPYUSDT', 'BTCUSDT']
+BITGET_SYMBOLS = ['XAUUSDT', 'BTCUSDT']   # Bitget rejects this endpoint for its forex and index contracts
 
 
 def append_new(source, key, rows, tkey):
@@ -60,7 +60,13 @@ def gate():
     n, errs, first = 0, 0, ''
     for c in GATE_CONTRACTS:
         try:
-            rows = get('https://api.gateio.ws/api/v4/futures/usdt/contract_stats?' + urllib.parse.urlencode({'contract': c, 'interval': '5m', 'limit': 100}))
+            base = 'https://api.gateio.ws/api/v4/futures/usdt/contract_stats?'
+            rows = get(base + urllib.parse.urlencode({'contract': c, 'interval': '5m', 'limit': 100}))
+            try:      # second, older window so a missed run of up to ~16 hours leaves no gap
+                rows += get(base + urllib.parse.urlencode({'contract': c, 'interval': '5m', 'limit': 100, 'from': int(NOW.timestamp()) - 200 * 300}))
+            except Exception:
+                pass
+            rows = list({r['time']: r for r in rows}.values())
             n += append_new('gate', c, rows, 'time')
         except Exception as e:
             errs += 1
