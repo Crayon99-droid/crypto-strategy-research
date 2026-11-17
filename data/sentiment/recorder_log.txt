@@ -6,3 +6,4 @@
 2026-11-15T23:57:40+00:00 gate: 431 new rows, 0 errors | bitget: 60 new rows, 6 errors EURUSDUSDT HTTPError HTTP Error 400: Bad Request | myfxbook: skipped (no secret) | oanda: skipped (no secret)
 2026-11-16T06:22:28+00:00 gate: 693 new rows, 0 errors | bitget: 60 new rows, 6 errors EURUSDUSDT HTTPError HTTP Error 400: Bad Request | myfxbook: skipped (no secret) | oanda: skipped (no secret)
 2026-11-16T16:19:16+00:00 gate: 900 new rows, 0 errors | bitget: 60 new rows, 6 errors EURUSDUSDT HTTPError HTTP Error 400: Bad Request | myfxbook: skipped (no secret) | oanda: skipped (no secret)
+2026-11-17T00:24:59+00:00 gate: 873 new rows, 0 errors | bitget: 60 new rows, 6 errors EURUSDUSDT HTTPError HTTP Error 400: Bad Request | myfxbook: skipped (no secret) | oanda: skipped (no secret)
