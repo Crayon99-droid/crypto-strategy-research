@@ -36,7 +36,7 @@ def append(source, header, rows):
 
 
 GATE_CONTRACTS = ['EURUSD_USDT', 'GBPUSD_USDT', 'NAS100_USDT', 'SPX500_USDT', 'GER40_USDT', 'XAU_USDT', 'QQQ_USDT', 'SPY_USDT', 'BTC_USDT']
-BITGET_SYMBOLS = ['EURUSDUSDT', 'GBPUSDUSDT', 'USDJPYUSDT', 'NDX100USDT', 'XAUUSDT', 'QQQUSDT', 'SPYUSDT', 'BTCUSDT']
+BITGET_SYMBOLS = ['XAUUSDT', 'XAUTUSDT', 'XAGUSDT', 'NVDAUSDT', 'BTCUSDT']  # only these return long/short data (probed 2026-11-19); FX + index perps return 400
 
 
 def append_new(source, key, rows, tkey):
