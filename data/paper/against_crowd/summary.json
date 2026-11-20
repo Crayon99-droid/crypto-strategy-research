@@ -1,10 +1,10 @@
 {
- "data_through": "2026-11-18",
- "closed_trades": 3,
+ "data_through": "2026-11-19",
+ "closed_trades": 4,
  "open_trades": 1,
- "mean_net_bp": -681.5,
- "t_stat": -1.17,
+ "mean_net_bp": -601.1,
+ "t_stat": -1.43,
  "win_rate": 0.0,
- "total_net_pct": -20.44,
+ "total_net_pct": -24.05,
  "status": "RUNNING"
 }
