@@ -6747,3 +6747,10 @@ ts_utc,ex,rows,error
 2026-11-25T12:25,gate,1042,
 2026-11-25T12:25,mexc,1107,
 2026-11-25T12:25,hyperliquid,179,
+2026-11-25T12:45,binance,0,urllib.error.HTTPError: HTTP Error 451:
+2026-11-25T12:45,bybit,0,urllib.error.HTTPError: HTTP Error 403: Forbidden
+2026-11-25T12:45,okx,539,
+2026-11-25T12:45,bitget,894,
+2026-11-25T12:45,gate,1042,
+2026-11-25T12:45,mexc,1107,
+2026-11-25T12:45,hyperliquid,179,
